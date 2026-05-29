@@ -1,0 +1,36 @@
+{
+  "generated_at": "2026-01-15T12:00:00Z",
+  "metrics": {
+    "calendar_missing_location": 3,
+    "chores_missing_start_time": 5,
+    "task_box_count": 0
+  },
+  "enrich_calendar": [
+    {
+      "id": "enrich-calendar-001",
+      "summary": "Alex piano lesson",
+      "source": "email",
+      "confidence": 0.85,
+      "fields": { "location": "123 Music Ave, Example City" },
+      "status": "pending"
+    }
+  ],
+  "enrich_chores": [
+    {
+      "id": "enrich-chore-001",
+      "summary": "Dishes",
+      "person": "Alex",
+      "fields": { "start_time": "20:00", "routine": true },
+      "status": "pending"
+    }
+  ],
+  "ask_operator": [
+    {
+      "id": "ask-001",
+      "title": "Call",
+      "questions": ["Who is this call with?"],
+      "status": "pending"
+    }
+  ],
+  "email_hints": []
+}

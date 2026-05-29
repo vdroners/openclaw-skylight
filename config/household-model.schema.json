@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/vdroners/openclaw-skylight/household-model.schema.json",
+  "title": "HouseholdModel",
+  "type": "object",
+  "required": ["frame_id", "writable_calendar_emails", "default_calendar_email"],
+  "properties": {
+    "frame_id": { "type": "string" },
+    "default_calendar_email": { "type": "string", "format": "email" },
+    "writable_calendar_emails": {
+      "type": "array",
+      "items": { "type": "string", "format": "email" },
+      "minItems": 1
+    },
+    "read_only_calendar_emails": {
+      "type": "array",
+      "items": { "type": "string", "format": "email" }
+    },
+    "default_grocery_list_id": { "type": "string" },
+    "kid_categories": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "family_talk_room": { "type": "string" },
+    "ops_talk_room": { "type": "string" },
+    "chore_time_defaults": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": [{ "type": "string" }, { "type": "boolean" }],
+        "minItems": 2,
+        "maxItems": 2
+      }
+    },
+    "email_keywords": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": true
+}

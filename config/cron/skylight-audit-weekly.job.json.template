@@ -1,0 +1,8 @@
+{
+  "name": "skylight-audit-weekly",
+  "schedule": "0 8 * * 0",
+  "command": "bash ${OPENCLAW_DIR}/scripts/skylight-audit-weekly.sh",
+  "env": {
+    "SKYLIGHT_FAMILY_TALK_ROOM": "${SKYLIGHT_FAMILY_TALK_ROOM}"
+  }
+}

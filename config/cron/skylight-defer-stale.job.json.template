@@ -1,0 +1,5 @@
+{
+  "name": "skylight-defer-stale",
+  "schedule": "0 6 * * *",
+  "command": "bash ${OPENCLAW_DIR}/scripts/skylight-household-defer-stale.sh"
+}

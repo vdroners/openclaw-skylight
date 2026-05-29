@@ -1,0 +1,11 @@
+.env
+.env.d/
+*.secret
+state/*
+!state/.gitkeep
+logs/*
+!logs/.gitkeep
+__pycache__/
+*.pyc
+.DS_Store
+node_modules/

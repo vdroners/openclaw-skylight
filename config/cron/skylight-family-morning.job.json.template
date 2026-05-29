@@ -1,0 +1,8 @@
+{
+  "name": "skylight-family-morning",
+  "schedule": "0 7 * * *",
+  "command": "bash ${OPENCLAW_DIR}/scripts/skylight-family-morning-post.sh",
+  "env": {
+    "SKYLIGHT_FAMILY_TALK_ROOM": "${SKYLIGHT_FAMILY_TALK_ROOM}"
+  }
+}

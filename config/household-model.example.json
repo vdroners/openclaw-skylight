@@ -1,0 +1,28 @@
+{
+  "$schema": "./household-model.schema.json",
+  "frame_id": "1000001",
+  "default_calendar_email": "family-parent@example.com",
+  "writable_calendar_emails": [
+    "family-parent@example.com",
+    "family-kid@example.com"
+  ],
+  "read_only_calendar_emails": [
+    "sports-feed@example.com"
+  ],
+  "default_grocery_list_id": "5000001",
+  "kid_categories": {
+    "2000001": "Alex",
+    "2000002": "Jordan"
+  },
+  "family_talk_room": "",
+  "ops_talk_room": "",
+  "chore_time_defaults": {
+    "dishes": ["20:00", true],
+    "clean room": ["20:00", true],
+    "take out trash": ["07:00", false],
+    "run": ["10:00", false]
+  },
+  "email_keywords": [
+    "lesson", "practice", "game", "tutor", "conference", "appointment"
+  ]
+}

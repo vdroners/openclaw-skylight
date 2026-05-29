@@ -1,0 +1,16 @@
+name: scrub-check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  scrub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+      - name: Publish gates
+        run: bash scripts/publish-gates.sh
