@@ -5,6 +5,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 OPENCLAW_DIR="${OPENCLAW_DIR:-$HOME/.openclaw}"
+FORCE=0
+[[ "${1:-}" == "--force" ]] && FORCE=1
 
 mkdir -p "${OPENCLAW_DIR}/scripts" "${OPENCLAW_DIR}/workspace/skills" "${OPENCLAW_DIR}/config"
 
@@ -15,8 +17,12 @@ link_one() {
     [[ "$cur" == "$src" ]] && return 0
     rm -f "$dst"
   elif [[ -e "$dst" ]]; then
-    echo "install: skip existing file $dst (not a symlink)" >&2
-    return 0
+    if [[ "$FORCE" -eq 1 ]]; then
+      rm -rf "$dst"
+    else
+      echo "install: skip existing $dst (use --force to replace with symlink)" >&2
+      return 0
+    fi
   fi
   ln -sf "$src" "$dst"
 }

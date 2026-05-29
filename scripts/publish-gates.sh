@@ -21,11 +21,15 @@ while IFS= read -r f; do
 done < <(find . -type f ! -path './.git/*' 2>/dev/null)
 [[ "$FAIL" -eq 0 ]] && pass S2 "no oversized tracked files"
 
-# S3: .env.example
+# S3: .env.example + no tracked .env
 for v in SKYLIGHT_FRAME_ID SKYLIGHT_EMAIL SKYLIGHT_PASSWORD NEXTCLOUD_URL NEXTCLOUD_USER NEXTCLOUD_PASS SKYLIGHT_FAMILY_TALK_ROOM FAMILY_GMAIL_ADDRESS; do
   grep -q "^${v}=" .env.example 2>/dev/null || fail S3 "missing $v in .env.example"
 done
-[[ -f .env ]] && fail S3 ".env tracked" || pass S3 ".env.example complete"
+if git ls-files --error-unmatch .env >/dev/null 2>&1; then
+  fail S3 ".env tracked in git"
+else
+  pass S3 ".env.example complete; .env not tracked"
+fi
 
 # S4: bash syntax
 for f in scripts/*.sh; do

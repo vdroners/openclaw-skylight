@@ -30,8 +30,8 @@ for pat in "${BLOCKLIST[@]}"; do
   fi
 done
 
-if [[ -f .env ]]; then
-  echo "S3 FAIL: .env must not be tracked" >&2
+if git ls-files --error-unmatch .env >/dev/null 2>&1; then
+  echo "S3 FAIL: .env must not be tracked in git" >&2
   FAIL=1
 fi
 
