@@ -31,13 +31,18 @@ mkdir -p "$STATE_DIR"
 export AUDIT BATCH LATEST STATE_DIR ROOM SCRIPT_DIR DRY LIMIT EMAIL_ONLY
 
 python3 <<'PY'
-import json, shutil, sys
+import json, os, shutil, subprocess, sys
 from datetime import datetime
 from pathlib import Path
 
-audit = json.loads(Path("$AUDIT").read_text())
-state_dir = Path("$STATE_DIR")
-latest_path = Path("$LATEST")
+audit_path = Path(os.environ["AUDIT"])
+state_dir = Path(os.environ["STATE_DIR"])
+latest_path = Path(os.environ["LATEST"])
+batch_path = Path(os.environ["BATCH"])
+room = os.environ["ROOM"]
+script_dir = os.environ["SCRIPT_DIR"]
+
+audit = json.loads(audit_path.read_text())
 terminal = {"applied", "rejected", "deferred"}
 skip_ids = set()
 if latest_path.is_file():
@@ -47,7 +52,8 @@ if latest_path.is_file():
             skip_ids.add(p["id"])
 
 proposals = []
-email_only = int("$EMAIL_ONLY")
+email_only = int(os.environ["EMAIL_ONLY"])
+limit = int(os.environ["LIMIT"])
 
 if email_only:
     for p in audit.get("enrich_calendar", []):
@@ -60,7 +66,7 @@ if email_only:
         if float(p.get("confidence") or 0) < 0.85:
             continue
         proposals.append(p)
-    proposals = proposals[: int("$LIMIT")]
+    proposals = proposals[:limit]
 else:
     for key in ("enrich_calendar", "enrich_chores", "ask_operator"):
         for p in audit.get(key, []):
@@ -79,7 +85,6 @@ else:
         else:
             buckets["ask-"].append(p)
     mixed = []
-    limit = int("$LIMIT")
     while any(buckets.values()) and len(mixed) < limit:
         for k in ("enrich-calendar", "enrich-chore", "ask-"):
             if buckets[k] and len(mixed) < limit:
@@ -118,7 +123,7 @@ for i, p in enumerate(proposals, 1):
             f"(Unanswered 7d → deferred, calendar unchanged)"
         )
 
-dry = int("$DRY")
+dry = int(os.environ["DRY"])
 if dry:
     for c in cards:
         print(c)
@@ -135,7 +140,7 @@ if total == 0:
 
 batch = {
     "generated_at": audit.get("generated_at"),
-    "audit_path": "$AUDIT",
+    "audit_path": str(audit_path),
     "proposals": proposals,
     "total": total,
     "skipped_terminal": skipped,
@@ -153,14 +158,13 @@ if latest_path.is_file():
     batch["proposals"] = list(merged.values())
     batch["total"] = len(proposals)
 
-Path("$BATCH").write_text(json.dumps(batch, indent=2))
-shutil.copy("$BATCH", latest_path)
+batch_path.write_text(json.dumps(batch, indent=2))
+shutil.copy(batch_path, latest_path)
 
-import subprocess
 for c in cards:
-    subprocess.run(["bash", "$SCRIPT_DIR/talk-post.sh", c, "$ROOM"], check=True)
-print(f"P1 posted {total} cards to $ROOM (skipped {skipped} terminal)")
+    subprocess.run(["bash", f"{script_dir}/talk-post.sh", c, room], check=True)
+print(f"P1 posted {total} cards to {room} (skipped {skipped} terminal)")
 if email_only:
     print(f"P-EMAIL: {total} email-sourced calendar cards")
-print(f"Batch: $BATCH")
+print(f"Batch: {batch_path}")
 PY
