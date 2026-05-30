@@ -239,13 +239,23 @@ gate_nc_wiring() {
     http://127.0.0.1:8789/talk-mention || echo 000)
   [[ "$code" != "000" ]] && ok "G4-4 relay /talk-mention reachable ($code)" || warn "G4-4 relay unreachable"
 
-  local db_container="${NC_DB_CONTAINER:-}"
-  local db_user="${NC_DB_USER:-}"
+  local db_container="${NC_DB_CONTAINER:-cloud_db}"
+  local db_user="${NC_DB_USER:-ncadmin}"
   local db_pass="${NC_DB_PASS:-}"
+  local db_name="${NC_DB_NAME:-nextcloud}"
   local bot_id="${TALK_BOT_ID:-22}"
 
-  if [[ -z "$db_container" || -z "$db_user" || -z "$db_pass" || -z "$OPS_ROOM" || -z "$FAMILY_ROOM" ]]; then
-    warn "G4-1 skipped — set NC_DB_CONTAINER, NC_DB_USER, NC_DB_PASS and room tokens for bot check"
+  if [[ -z "$db_pass" ]] && command -v docker >/dev/null 2>&1; then
+    db_pass=$(docker exec "$db_container" env 2>/dev/null | awk -F= '/^MYSQL_PASSWORD=/{print $2; exit}' || true)
+  fi
+
+  if [[ -z "$OPS_ROOM" || -z "$FAMILY_ROOM" ]]; then
+    warn "G4-1 skipped — ops_talk_room / family_talk_room missing in household-model.json"
+    return
+  fi
+
+  if [[ -z "$db_pass" ]]; then
+    warn "G4-1 skipped — set NC_DB_PASS or run with reachable ${db_container} for auto-resolve"
     return
   fi
 
@@ -254,7 +264,7 @@ gate_nc_wiring() {
     return
   fi
 
-  cnt=$(docker exec "$db_container" mariadb -u "$db_user" -p"$db_pass" nextcloud -N -e \
+  cnt=$(docker exec "$db_container" mariadb -u "$db_user" -p"$db_pass" "$db_name" -N -e \
     "SELECT COUNT(*) FROM oc_talk_bots_conversation WHERE bot_id=${bot_id} AND token IN ('${OPS_ROOM}','${FAMILY_ROOM}');" 2>/dev/null || echo 0)
   [[ "$cnt" -ge 2 ]] && ok "G4-1 bot in both rooms (count=$cnt)" || bad "G4-1 bot missing from primary rooms (count=$cnt)"
 }

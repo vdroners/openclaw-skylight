@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-05-30
+
+### Fixed
+
+- `talk-response-audit.sh` G4-1 auto-resolves `NC_DB_PASS` from `cloud_db` container (no manual env required)
+
+### Changed
+
+- Talk fix plan sign-off: automated gates marked PASS; relay partial coverage noted for T1/T2/T8
+
 ## [0.1.3] - 2026-05-30
 
 ### Added
