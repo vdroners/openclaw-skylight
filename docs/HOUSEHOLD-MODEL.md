@@ -12,6 +12,7 @@ Copy `config/household-model.example.json` to `config/household-model.json` (or 
 | `kid_categories` | Profile ID → name map for chore grouping |
 | `chore_time_defaults` | Title → `[time, routine]` for proposals |
 | `email_keywords` | Extra keywords for email enrich scan |
+| `calendar_source_ids` | Map of calendar owner email → Skylight source id (W-1b gate) |
 
 Validate:
 

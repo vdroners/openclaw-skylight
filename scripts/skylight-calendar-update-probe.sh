@@ -15,20 +15,25 @@ api = os.environ["SKYLIGHT_API_URL"]
 auth = os.environ["SKYLIGHT_AUTHORIZATION"]
 tz = os.environ.get("SKYLIGHT_TIMEZONE", "America/Los_Angeles")
 
-daniel_cal = os.environ.get("SKYLIGHT_DEFAULT_CALENDAR_ID", "6440477")
-mom_cal = os.environ.get("SKYLIGHT_MOM_CALENDAR_ID", "6427910")
+daniel_cal = os.environ.get("SKYLIGHT_DEFAULT_CALENDAR_ID", "")
+mom_cal = os.environ.get("SKYLIGHT_MOM_CALENDAR_ID", "")
 model_path = os.environ.get("HOUSEHOLD_MODEL_JSON")
 if model_path and os.path.isfile(model_path):
     model = json.load(open(model_path))
     src = model.get("calendar_source_ids") or {}
-    default_email = model.get("default_calendar_email", "daniel.sautter56@gmail.com")
-    mom_email = "mrssautter@gmail.com"
+    default_email = model.get("default_calendar_email", "")
+    writable = model.get("writable_calendar_emails") or []
+    mom_email = writable[1] if len(writable) > 1 else (writable[0] if len(writable) == 1 else "")
     for em, key in ((default_email, "daniel_cal"), (mom_email, "mom_cal")):
-        if em in src:
+        if em and em in src:
             if key == "daniel_cal":
-                daniel_cal = str(src[em])
-            else:
-                mom_cal = str(src[em])
+                daniel_cal = daniel_cal or str(src[em])
+            elif mom_email:
+                mom_cal = mom_cal or str(src[em])
+
+if not daniel_cal or not mom_cal:
+    print("W-1 FAIL: set SKYLIGHT_DEFAULT_CALENDAR_ID / SKYLIGHT_MOM_CALENDAR_ID or calendar_source_ids in household-model.json", file=sys.stderr)
+    sys.exit(1)
 
 tomorrow = (date.today() + timedelta(days=1)).isoformat()
 print(f"W-1b: daniel_cal={daniel_cal} mom_cal={mom_cal}")

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Comprehensive README, SETUP, and CONTRIBUTING docs for OpenClaw operators
+- Remove hardcoded PII defaults from calendar probe and reply-handler
+- `scrub-for-publish.sh` falls back to grep when ripgrep is unavailable
+
 ## [0.1.2] - 2026-05-29
 
 ### Added

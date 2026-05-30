@@ -64,5 +64,5 @@ except urllib.error.HTTPError as e:
     print(f"V-11 WARN: created {event_id} but delete HTTP {e.code}", file=sys.stderr)
     sys.exit(1)
 cal = os.environ.get("SKYLIGHT_DEFAULT_CALENDAR_ID", "frame-default")
-print(f"V-11 PASS: created+deleted event on calendar env={cal} (frame default daniel 1000101)")
+print(f"V-11 PASS: created+deleted smoke event (calendar env={cal})")
 PY

@@ -24,11 +24,19 @@ BLOCKLIST=(
 
 echo "=== scrub-for-publish.sh ==="
 for pat in "${BLOCKLIST[@]}"; do
-  if rg -n "$pat" --glob '!.git' --glob '!scripts/scrub-for-publish.sh' . 2>/dev/null; then
+  hit=0
+  if command -v rg >/dev/null 2>&1; then
+    rg -n "$pat" --glob '!.git' --glob '!scripts/scrub-for-publish.sh' . >/tmp/scrub-hit.txt 2>/dev/null && hit=1
+  else
+    grep -rEn "$pat" --exclude-dir=.git --exclude=scrub-for-publish.sh . >/tmp/scrub-hit.txt 2>/dev/null && hit=1
+  fi
+  if [[ "$hit" -eq 1 ]]; then
+    cat /tmp/scrub-hit.txt >&2
     echo "S1 FAIL: blocklist hit: $pat" >&2
     FAIL=1
   fi
 done
+rm -f /tmp/scrub-hit.txt
 
 if git ls-files --error-unmatch .env >/dev/null 2>&1; then
   echo "S3 FAIL: .env must not be tracked in git" >&2

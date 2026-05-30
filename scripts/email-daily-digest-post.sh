@@ -10,7 +10,7 @@ source "${SCRIPT_DIR}/load-nextcloud-env.sh"
 : "${NEXTCLOUD_URL:?missing}"
 : "${NEXTCLOUD_USER:?missing}"
 : "${NEXTCLOUD_PASS:?missing}"
-ROOM="${EMAIL_DIGEST_OPS_ROOM:-${EMAIL_DIGEST_TALK_ROOM:-jf7zijqp}}"
+ROOM="${EMAIL_DIGEST_OPS_ROOM:-${EMAIL_DIGEST_WORK_ROOM:-${EMAIL_DIGEST_TALK_ROOM:-}}}"
 WINDOW_SEC="${EMAIL_DIGEST_WINDOW_SEC:-86400}"
 DRY=0
 [[ "${1:-}" == "--dry-run" ]] && DRY=1
@@ -139,5 +139,6 @@ if [[ "$DRY" -eq 1 ]]; then
   exit 0
 fi
 
+[[ -n "$ROOM" ]] || { echo "EMAIL_DIGEST_OPS_ROOM (or EMAIL_DIGEST_TALK_ROOM) not set" >&2; exit 1; }
 bash "${SCRIPT_DIR}/talk-post.sh" "$BODY" "$ROOM"
 echo "DIGEST_POSTED room=${ROOM} accounts=ops,work"

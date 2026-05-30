@@ -19,7 +19,7 @@ done
 
 STATE_DIR="${OPENCLAW_DIR:-$HOME/.openclaw}/state/household-proposals"
 BATCH="${STATE_DIR}/batch-latest.json"
-ROOM="${SKYLIGHT_FAMILY_TALK_ROOM:-9x4f25n3}"
+ROOM="${SKYLIGHT_FAMILY_TALK_ROOM:-}"
 
 export BATCH ROOM SCRIPT_DIR MSG DRY
 
@@ -68,6 +68,9 @@ def post_confirm(text):
     if dry:
         print(f"DRY-RUN confirm: {text}")
         return True
+    if not room:
+        print("ERROR: SKYLIGHT_FAMILY_TALK_ROOM not set — cannot post confirmation", file=sys.stderr)
+        return False
     r = subprocess.run(
         ["bash", f"{script_dir}/talk-post.sh", text, room],
         capture_output=True, text=True,
