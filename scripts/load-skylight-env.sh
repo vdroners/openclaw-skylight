@@ -67,3 +67,6 @@ fi
 unset SKYLIGHT_TOKEN 2>/dev/null || true
 
 : "${SKYLIGHT_FRAME_ID:?SKYLIGHT_FRAME_ID not set}"
+
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/load-agent-env.sh" 2>/dev/null || true

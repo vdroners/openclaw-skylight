@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-30
+
+### Changed (public release prep)
+
+- Rebrand Alfred → OpenClaw: `@openclaw` mention alias, renamed `openclaw-*` gate/catchup scripts
+- Remove operator-specific IDs, emails, and family names from scripts/skills/docs
+- Chore dedupe: `skylight-chores-dedupe-parent` reads `parent_chore_dedupe` from household-model
+- Expanded `scrub-for-publish.sh` blocklist + legacy `alfred` branding check
+- Mail API retry (`nc-http-retry.sh`) from v0.1.6 included in this release line
+
+### Removed
+
+- `skylight-chores-dedupe-mom` (operator-hardcoded group IDs)
+
 ## [0.1.6] - 2026-05-30
 
 ### Fixed
@@ -74,7 +88,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Skylight + household audit/propose/apply pipeline
-- Family Hub dispatch for `@alfred YES|NO|EDIT` proposal replies
+- Family Hub dispatch for `@openclaw YES|NO|EDIT` proposal replies
 - Fast email enrich scan (subject-first, E2-S <60s gate)
 - email-intelligence skill + NC Mail helpers
 - Morning digest and weekly audit scripts

@@ -30,7 +30,7 @@ SNAP = OPENCLAW / "state" / "chore-fill-snapshots"
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
-    ap.add_argument("--person", help="Only fill chores for this person (Dan, Phoebe, Wesley)")
+    ap.add_argument("--person", help="Only fill chores for this person (name from household-model kid_categories)")
     args = ap.parse_args()
 
     frame_id = os.environ["SKYLIGHT_FRAME_ID"]
@@ -40,14 +40,10 @@ def main() -> int:
     model = load_model(MODEL)
     td = chore_time_defaults(model)
     rd = reward_defaults(model)
-    kid_map = model.get("kid_categories") or {
-        "19116283": "Phoebe",
-        "19255362": "Wesley",
-        "19177556": "Dan",
-    }
+    kid_map = model.get("kid_categories") or {}
     person_filter = args.person.strip().lower() if args.person else None
 
-    rows = list_chore_series(frame_id)
+    rows = list_chore_series(frame_id, model=model)
     if not args.dry_run:
         SNAP.mkdir(parents=True, exist_ok=True)
 
@@ -58,7 +54,7 @@ def main() -> int:
         if person_filter and person.lower() != person_filter:
             continue
 
-        fields = build_enrichment(row, td, rd)
+        fields = build_enrichment(row, td, rd, set(kid_map.keys()))
         if not fields:
             skipped += 1
             continue

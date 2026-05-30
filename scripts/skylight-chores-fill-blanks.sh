@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Fill blank Skylight chore times, routine flags, and reward points.
-# Usage: skylight-chores-fill-blanks.sh [--dry-run] [--person Dan]
+# Usage: skylight-chores-fill-blanks.sh [--dry-run] [--person Alex]
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

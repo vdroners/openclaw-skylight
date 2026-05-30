@@ -28,7 +28,7 @@
 | `skylight-chores-dedupe-mom.sh` | Consolidate duplicate parent monthly chores |
 | `skylight-household-deep-audit.sh` | Metrics + enrich proposals |
 
-Configure defaults in `~/.openclaw/config/household-model.json` (`chore_time_defaults`, `chore_reward_defaults`, `mom_chore_canonical`).
+Configure defaults in `~/.openclaw/config/household-model.json` (`chore_time_defaults`, `chore_reward_defaults`, `parent_chore_dedupe`).
 
 ## Verification
 

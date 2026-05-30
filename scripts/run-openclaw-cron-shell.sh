@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Run a post script directly (no LLM). Append OpenClaw-compatible run log for ai-gates.
-# Usage: run-alfred-cron-shell.sh JOB_ID JOB_NAME SCRIPT [SUCCESS_GREP]
+# Usage: run-openclaw-cron-shell.sh JOB_ID JOB_NAME SCRIPT [SUCCESS_GREP]
 set -euo pipefail
 
 JOB_ID="${1:?job id}"

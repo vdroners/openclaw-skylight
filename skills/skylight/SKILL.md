@@ -15,7 +15,7 @@ metadata:
 
 Control the household **Skylight frame** via the unofficial API at `https://app.ourskylight.com`.
 
-## Alfred routing
+## OpenClaw routing
 
 | Topic | Skill |
 |-------|-------|
@@ -28,7 +28,7 @@ Control the household **Skylight frame** via the unofficial API at `https://app.
 
 Environment (from `~/.openclaw/.env` via `load-skylight-env.sh`):
 
-- `SKYLIGHT_EMAIL` — Alfred Skylight login
+- `SKYLIGHT_EMAIL` — OpenClaw Skylight login
 - `SKYLIGHT_PASSWORD` — in `.env` only (never commit)
 - `SKYLIGHT_FRAME_ID` — household ID (e.g. `1000001`)
 - `SKYLIGHT_URL` — `https://app.ourskylight.com`
@@ -98,14 +98,14 @@ curl -s "$API/frames/$FID/calendar_events?date_min=YYYY-MM-DD&date_max=YYYY-MM-D
 
 ### Calendar events (create → Google two-way)
 
-Use **flat JSON body** (not JSON:API). Omit `calendar_id` to use frame default (daniel `1000101`):
+Use **flat JSON body** (not JSON:API). Omit `calendar_id` to use frame default (frame default calendar):
 
 ```bash
 curl -s -X POST "$API/frames/$FID/calendar_events" \
   -H "Authorization: $SKYLIGHT_AUTHORIZATION" -H "Content-Type: application/json" \
   -H "User-Agent: SkylightMobile (web)" \
   -d '{
-    "summary": "Alfred smoke: test event",
+    "summary": "OpenClaw smoke: test event",
     "starts_at": "2026-05-30T09:00:00.000-07:00",
     "ends_at": "2026-05-30T09:30:00.000-07:00",
     "timezone": "America/Los_Angeles"
@@ -140,7 +140,7 @@ curl -s "$API/frames/$FID/rewards" -H "Authorization: $SKYLIGHT_AUTHORIZATION"
 curl -s -X POST "$API/frames/$FID/rewards" \
   -H "Authorization: $SKYLIGHT_AUTHORIZATION" -H "Content-Type: application/json" \
   -H "User-Agent: SkylightMobile (web)" \
-  -d '{"name":"Choose family movie","point_value":20,"category_ids":[19116283,19255362],"respawn_on_redemption":true}'
+  -d '{"name":"Choose family movie","point_value":20,"category_ids":[2000001,2000002],"respawn_on_redemption":true}'
 ```
 
 Flat body; one reward resource per `category_id`. Balances: `skylight reward-points get`.
@@ -160,7 +160,7 @@ bash ~/.openclaw/scripts/skylight-import-recipes-verify.sh --dry-run <recipe.md>
 bash ~/.openclaw/scripts/skylight-auth-refresh.sh         # re-login if smoke fails
 ```
 
-**Automation matrix:** `~/.openclaw/docs/ALFRED-AUTOMATION-CAPABILITIES.md`
+**Automation matrix:** `~/.openclaw/docs/OPENCLAW-AUTOMATION-CAPABILITIES.md`
 
 ### Tier A cron (family)
 
@@ -169,7 +169,7 @@ bash ~/.openclaw/scripts/skylight-auth-refresh.sh         # re-login if smoke fa
 | `skylight-family-morning` | `skylight-family-morning-post.sh` | `` |
 | `skylight-audit-weekly` | `skylight-audit-weekly.sh` | `` |
 
-Family digest includes: calendar today/tomorrow, reward points (Phoebe/Wesley/Dan), chores grouped by person, meals this week (`listSittings`), grocery pending (`lists listItems`).
+Family digest includes: calendar today/tomorrow, reward points by person, chores grouped by person, meals this week (`listSittings`), grocery pending (`lists listItems`).
 
 ## Family Hub propose-first (household audit)
 
@@ -177,7 +177,7 @@ Room **``** only. **Never silent-write** calendar/chores/lists from chat until o
 
 ### Mandatory first step (Family Hub room)
 
-When the incoming message matches `@alfred (YES|NO|EDIT) (enrich-calendar-*|enrich-chore-*|ask-*)`, **exec dispatch before any other tool or LLM improvisation**:
+When the incoming message matches `@openclaw (YES|NO|EDIT) (enrich-calendar-*|enrich-chore-*|ask-*)`, **exec dispatch before any other tool or LLM improvisation**:
 
 ```bash
 bash ~/.openclaw/scripts/skylight-family-hub-dispatch.sh "<exact user message>"
@@ -191,9 +191,9 @@ Wire via OpenClaw Talk webhook or agent pre-tool hook pointing at the script abo
 
 | Intent | Action |
 |--------|--------|
-| `@alfred YES enrich-chore-023` | dispatch → reply-handler → apply + confirmation post |
-| `@alfred NO enrich-chore-024` | dispatch → rejected + confirmation post |
-| `@alfred EDIT ask-003 …` | dispatch → edit noted + confirmation post |
+| `@openclaw YES enrich-chore-023` | dispatch → reply-handler → apply + confirmation post |
+| `@openclaw NO enrich-chore-024` | dispatch → rejected + confirmation post |
+| `@openclaw EDIT ask-003 …` | dispatch → edit noted + confirmation post |
 | "add milk to grocery" | Propose list item card (C1 — no direct write) |
 | "what's on the calendar Saturday?" | Read-only digest from API (C2) |
 
@@ -208,10 +208,10 @@ bash ~/.openclaw/scripts/skylight-household-defer-stale.sh   # 7d ask_operator
 
 ## Test hygiene
 
-Prefix smoke/test data with `Alfred smoke:` and delete after verification.
+Prefix smoke/test data with `OpenClaw smoke:` and delete after verification.
 
 ## Notes
 
 - Unofficial API — may change without notice.
-- Sidekick on the frame is complementary (voice/photo/email); Alfred uses API + Talk.
+- Sidekick on the frame is complementary (voice/photo/email); The OpenClaw agent uses API + Talk.
 - Device email for Sidekick imports: `SKYLIGHT_DEVICE_EMAIL` (one recipe per email).

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Run Alfred backlog / daily catch-up without LLM agentTurn.
-# Usage: alfred-catchup.sh [--morning] [--household] [--qa] [--gates] [--all]
+# Run OpenClaw backlog / daily catch-up without LLM agentTurn.
+# Usage: openclaw-catchup.sh [--morning] [--household] [--qa] [--gates] [--all]
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -42,7 +42,7 @@ done
 run_cron_job() {
   local id="$1" name="$2" script="$3" grep="${4:-POSTED}"
   echo "== cron: $name"
-  bash "${SCRIPT_DIR}/run-alfred-cron-shell.sh" "$id" "$name" "$script" "$grep"
+  bash "${SCRIPT_DIR}/run-openclaw-cron-shell.sh" "$id" "$name" "$script" "$grep"
 }
 
 step() {
@@ -60,7 +60,6 @@ if [[ "$MORNING" -eq 1 ]]; then
 
   step "Skylight auth refresh" bash "${SCRIPT_DIR}/skylight-auth-refresh.sh"
 
-  # 06:00 calendar, 06:30 tasks, 07:00 digest, 07:30 family, 08:00 health
   step "Calendar morning brief" run_cron_job \
     f2b3c4d5-calendar-morning-brief calendar-morning-brief \
     "${SCRIPT_DIR}/calendar-morning-brief-post.sh" CALENDAR_BRIEF_POSTED
@@ -88,8 +87,8 @@ if [[ "$MORNING" -eq 1 ]]; then
   fi
 
   step "Self watchdog" run_cron_job \
-    c924d4ec-a108-475b-9a0e-bd6f8db87b23 alfred-self-watchdog \
-    "${SCRIPT_DIR}/alfred-self-watchdog-post.sh" watchdog
+    c924d4ec-a108-475b-9a0e-bd6f8db87b23 openclaw-self-watchdog \
+    "${SCRIPT_DIR}/openclaw-self-watchdog-post.sh" watchdog
 fi
 
 if [[ "$HOUSEHOLD" -eq 1 ]]; then
@@ -118,19 +117,17 @@ fi
 
 if [[ "$QA" -eq 1 ]]; then
   echo ""
-  echo "=== NC-GCS QA (direct, no agentTurn) ==="
+  echo "=== Optional QA (operator-local skills only) ==="
   QA_DIR="${OPENCLAW}/workspace/skills/nc-gcs-qa"
   if [[ -x "${QA_DIR}/run-qa-smoke.sh" ]]; then
     step "QA smoke" bash "${QA_DIR}/run-qa-smoke.sh"
   fi
-  # run-qa-api-sweep.sh is a stub (self-recursive); use full QA cron when fixed.
 fi
 
 if [[ "$GATES" -eq 1 ]]; then
   echo ""
   echo "=== Final gates ==="
-  bash "${SCRIPT_DIR}/alfred-ai-gates.sh" --check
-  bash "${SCRIPT_DIR}/verify-openclaw-capabilities.sh" 2>&1 | tail -5
+  bash "${SCRIPT_DIR}/openclaw-ai-gates.sh" --check
 fi
 
 echo ""

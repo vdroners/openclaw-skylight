@@ -73,7 +73,7 @@ if [[ "$NEED_SYNC" -eq 1 ]] && docker ps --format '{{.Names}}' 2>/dev/null | gre
   (timeout 15 docker exec cloud_app php occ mail:account:sync "$MAIL_ACCOUNT" 2>/dev/null || true) &
 fi
 
-export AUDIT MAILBOXES_FILE MAIL_ACCOUNT NEXTCLOUD_URL NEXTCLOUD_USER NEXTCLOUD_PASS
+export AUDIT MAILBOXES_FILE MAIL_ACCOUNT NEXTCLOUD_URL NEXTCLOUD_USER NEXTCLOUD_PASS HOUSEHOLD_MODEL_JSON
 
 python3 <<'PY'
 import json, os, re, sys, time, urllib.request
@@ -92,8 +92,13 @@ auth_hdr = base64.b64encode(f"{auth_user}:{auth_pass}".encode()).decode()
 
 MAX_MSGS = 30
 BODY_TIMEOUT = 10
-keywords = ["phoebe", "wesley", "futsal", "tutor", "lesson", "conference", "appointment",
-            "rose city", "ohsu", "practice", "game", "birthday"]
+model_path = os.environ.get("HOUSEHOLD_MODEL_JSON", "")
+model_keywords = []
+if model_path and Path(model_path).is_file():
+    model_keywords = json.loads(Path(model_path).read_text()).get("email_keywords") or []
+keywords = [k.lower() for k in (model_keywords or [
+    "lesson", "practice", "game", "tutor", "conference", "appointment", "birthday"
+])]
 
 cal_titles = [(p.get("summary") or "").lower() for p in audit.get("enrich_calendar", [])]
 cal_words = set()
@@ -145,9 +150,8 @@ def strip_html(text):
 def extract_location(subj, body):
     text = strip_html(subj + " " + body)
     for pat in [
-        r"(\\d+[^,\\n]{5,80}(?:Portland|OR|Oregon)[^,\\n]{0,40})",
-        r"(Rose City Futsal[^\\n]{0,60})",
-        r"(2832 SW Sam Jackson Park Rd[^\\n]{0,40})",
+        r"(\d+[^,\n]{5,80}(?:Street|St|Avenue|Ave|Road|Rd|Blvd)[^,\n]{0,40})",
+        r"(\d+[^,\n]{5,80},[^,\n]{3,40})",
     ]:
         m2 = re.search(pat, text, re.I)
         if not m2:

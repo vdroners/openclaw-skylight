@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# W-1: PATCH calendar event location+description on daniel default + mom calendar; then DELETE.
+# W-1: PATCH calendar event location+description on primary + secondary writable calendars; then DELETE.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,28 +15,28 @@ api = os.environ["SKYLIGHT_API_URL"]
 auth = os.environ["SKYLIGHT_AUTHORIZATION"]
 tz = os.environ.get("SKYLIGHT_TIMEZONE", "America/Los_Angeles")
 
-daniel_cal = os.environ.get("SKYLIGHT_DEFAULT_CALENDAR_ID", "")
-mom_cal = os.environ.get("SKYLIGHT_MOM_CALENDAR_ID", "")
+primary_cal = os.environ.get("SKYLIGHT_DEFAULT_CALENDAR_ID", "")
+secondary_cal = os.environ.get("SKYLIGHT_SECONDARY_CALENDAR_ID", "")
 model_path = os.environ.get("HOUSEHOLD_MODEL_JSON")
 if model_path and os.path.isfile(model_path):
     model = json.load(open(model_path))
     src = model.get("calendar_source_ids") or {}
     default_email = model.get("default_calendar_email", "")
     writable = model.get("writable_calendar_emails") or []
-    mom_email = writable[1] if len(writable) > 1 else (writable[0] if len(writable) == 1 else "")
-    for em, key in ((default_email, "daniel_cal"), (mom_email, "mom_cal")):
+    secondary_email = writable[1] if len(writable) > 1 else (writable[0] if len(writable) == 1 else "")
+    for em, key in ((default_email, "primary"), (secondary_email, "secondary")):
         if em and em in src:
-            if key == "daniel_cal":
-                daniel_cal = daniel_cal or str(src[em])
-            elif mom_email:
-                mom_cal = mom_cal or str(src[em])
+            if key == "primary":
+                primary_cal = primary_cal or str(src[em])
+            elif secondary_email:
+                secondary_cal = secondary_cal or str(src[em])
 
-if not daniel_cal or not mom_cal:
-    print("W-1 FAIL: set SKYLIGHT_DEFAULT_CALENDAR_ID / SKYLIGHT_MOM_CALENDAR_ID or calendar_source_ids in household-model.json", file=sys.stderr)
+if not primary_cal or not secondary_cal:
+    print("W-1 FAIL: set SKYLIGHT_DEFAULT_CALENDAR_ID / SKYLIGHT_SECONDARY_CALENDAR_ID or calendar_source_ids in household-model.json", file=sys.stderr)
     sys.exit(1)
 
 tomorrow = (date.today() + timedelta(days=1)).isoformat()
-print(f"W-1b: daniel_cal={daniel_cal} mom_cal={mom_cal}")
+print(f"W-1b: primary_cal={primary_cal} secondary_cal={secondary_cal}")
 
 headers = {
     "Authorization": auth,
@@ -57,7 +57,7 @@ def req(method, path, body=None):
 
 def probe(label, calendar_id=None):
     payload = {
-        "summary": f"Alfred smoke: update probe ({label})",
+        "summary": f"OpenClaw smoke: update probe ({label})",
         "starts_at": f"{tomorrow}T09:00:00.000-07:00",
         "ends_at": f"{tomorrow}T09:30:00.000-07:00",
         "timezone": tz,
@@ -78,8 +78,8 @@ def probe(label, calendar_id=None):
         "starts_at": payload["starts_at"],
         "ends_at": payload["ends_at"],
         "timezone": tz,
-        "location": "123 Probe St, Portland OR",
-        "description": "Alfred PATCH probe — location and description",
+        "location": "123 Probe St, Example City",
+        "description": "OpenClaw PATCH probe — location and description",
     }
     if calendar_id:
         patch["calendar_id"] = int(calendar_id)
@@ -97,11 +97,11 @@ def probe(label, calendar_id=None):
     print(f"W-1 PASS {label} calendar_id={calendar_id or 'default'} patch_via={method}")
     return True
 
-ok1 = probe("daniel", daniel_cal)
-ok2 = probe("mom", mom_cal)
-if daniel_cal.startswith("100010") or mom_cal.startswith("100010"):
+ok1 = probe("primary", primary_cal)
+ok2 = probe("secondary", secondary_cal)
+if primary_cal.startswith("100010") or secondary_cal.startswith("100010"):
     print("W-1b FAIL: placeholder calendar IDs detected", file=sys.stderr)
     sys.exit(1)
-print(f"Gate W-1b: PASS daniel={daniel_cal} mom={mom_cal}")
+print(f"Gate W-1b: PASS primary={primary_cal} secondary={secondary_cal}")
 sys.exit(0 if ok1 and ok2 else 1)
 PY

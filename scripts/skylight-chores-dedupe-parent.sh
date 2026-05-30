@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Consolidate Mom's duplicate monthly shelf/piano/knitting chores.
-# Usage: skylight-chores-dedupe-mom.sh [--dry-run]
+# Consolidate duplicate parent-member chores (configured in household-model.json).
+# Usage: skylight-chores-dedupe-parent.sh [--dry-run]
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -8,4 +8,4 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/load-skylight-env.sh"
 export OPENCLAW_DIR="${OPENCLAW_DIR:-$HOME/.openclaw}"
 
-exec python3 "${SCRIPT_DIR}/skylight-chores-dedupe-mom.py" "$@"
+exec python3 "${SCRIPT_DIR}/skylight-chores-dedupe-parent.py" "$@"

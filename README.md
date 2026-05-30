@@ -2,11 +2,11 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.4+-green.svg)](https://github.com/openclaw/openclaw)
-[![Release](https://img.shields.io/badge/release-v0.1.6-orange.svg)](CHANGELOG.md)
+[![Release](https://img.shields.io/badge/release-v0.2.0-orange.svg)](CHANGELOG.md)
 
 **OpenClaw skills + shell automation for Skylight Calendar frames** — household audit, propose-first Family Hub approvals, morning digests, and optional Nextcloud Mail enrichment.
 
-> **Unofficial Skylight API.** Skylight may change without notice. This project is **propose-first by design**: Alfred never silently writes to family calendars or chores from chat.
+> **Unofficial Skylight API.** Skylight may change without notice. This project is **propose-first by design**: OpenClaw never silently writes to family calendars or chores from chat.
 
 ---
 
@@ -50,7 +50,7 @@ It does **not** include NC-GCS fleet ops, HPB patches, or private operator runbo
 
 These rules are intentional — follow them when extending the project:
 
-1. **Propose first, apply second** — every calendar/chore change goes through a proposal card in Family Hub; operators reply `@alfred YES|NO|EDIT <id>`.
+1. **Propose first, apply second** — every calendar/chore change goes through a proposal card in Family Hub; operators reply `@openclaw YES|NO|EDIT <id>`.
 2. **Dispatch before LLM tools** — when a Talk message matches a proposal reply, exec `skylight-family-hub-dispatch.sh` first (deterministic routing).
 3. **No secrets in git** — credentials in `~/.openclaw/.env` and `~/.openclaw/.env.d/*.secret` only; run `scrub-for-publish.sh` before every push.
 4. **Gates before release** — `mail-gates.sh`, `skylight-household-gates.sh`, and `publish-gates.sh` must report `hard_fail=0` on homelab before tagging.
@@ -97,7 +97,7 @@ flowchart TB
 
 | Room env | Typical use |
 |----------|-------------|
-| `SKYLIGHT_FAMILY_TALK_ROOM` | Proposal cards, morning digest, `@alfred` household chat |
+| `SKYLIGHT_FAMILY_TALK_ROOM` | Proposal cards, morning digest, `@openclaw` household chat |
 | `SKYLIGHT_OPS_TALK_ROOM` / `EMAIL_DIGEST_*_ROOM` | Fleet briefs, ops/work email digest |
 
 ---
@@ -106,7 +106,7 @@ flowchart TB
 
 | Requirement | Notes |
 |-------------|-------|
-| [OpenClaw](https://github.com/openclaw/openclaw) **2026.4+** | Gateway + skills; `tools.profile: full` recommended for Alfred stacks |
+| [OpenClaw](https://github.com/openclaw/openclaw) **2026.4+** | Gateway + skills; `tools.profile: full` recommended for OpenClaw stacks |
 | [skylight-tools](https://github.com/aarons22/skylight-tools) | CLI at `~/go/bin/skylight` — chores, lists, categories |
 | Python 3.10+ | Embedded in most scripts |
 | Optional: Nextcloud | Talk (proposal cards) + Mail app (Gmail IMAP/SMTP) |
@@ -174,7 +174,7 @@ Key fields: `writable_calendar_emails`, `calendar_source_ids` (for W-1b gate), `
 
 ## Nextcloud Mail (3 accounts)
 
-Alfred supports **three Gmail-backed NC Mail accounts**:
+OpenClaw supports **three Gmail-backed NC Mail accounts**:
 
 | Role | IMAP | SMTP | Used by |
 |------|------|------|---------|
@@ -204,7 +204,7 @@ Backward compat: `scripts/nc-mail-add-gmail.sh` wraps sync for family only.
 
 ### Skills
 
-| Skill | When Alfred uses it |
+| Skill | When the OpenClaw agent uses it |
 |-------|---------------------|
 | [`skylight`](skills/skylight/SKILL.md) | Family calendar, chores, grocery, rewards, recipes |
 | [`email-intelligence`](skills/email-intelligence/SKILL.md) | Inbox triage, digest, draft replies (ops/work); CSRF header required |
@@ -216,12 +216,12 @@ Backward compat: `scripts/nc-mail-add-gmail.sh` wraps sync for family only.
 Before any LLM tool on proposal replies:
 
 ```bash
-bash ~/.openclaw/scripts/skylight-family-hub-dispatch.sh "@alfred NO enrich-chore-001"
+bash ~/.openclaw/scripts/skylight-family-hub-dispatch.sh "@openclaw NO enrich-chore-001"
 ```
 
 Supports `--dry-run` for automated gate **C1b** (no batch write, no Talk post).
 
-### Verify Alfred stack
+### Verify OpenClaw stack
 
 After install:
 
@@ -262,7 +262,7 @@ Operator guide: [docs/HOUSEHOLD-ENRICHMENT.md](docs/HOUSEHOLD-ENRICHMENT.md).
 | Talk | `bash scripts/talk-response-audit.sh --check --phase all` | After Talk policy changes |
 | Mail | `bash scripts/mail-gates.sh --check` | After mail sync |
 | Household | `bash scripts/skylight-household-gates.sh` | Before sign-off |
-| Alfred AI | `bash scripts/alfred-ai-gates.sh --check` | Cron + dispatch + TR-ALL |
+| OpenClaw AI | `bash scripts/openclaw-ai-gates.sh --check` | Cron + dispatch + TR-ALL |
 | Publish | `bash scripts/publish-gates.sh` | Before git push |
 | Makefile | `make gates` | All of the above (except capabilities) |
 
@@ -288,14 +288,14 @@ openclaw-skylight/
 │   ├── load-skylight-env.sh, load-nextcloud-env.sh
 │   ├── skylight-*.sh, skylight_*.py       # audit, propose, chores, recipes
 │   ├── talk-response-audit.sh, talk-post.sh
-│   ├── alfred-ai-gates.sh, alfred-catchup.sh
+│   ├── openclaw-ai-gates.sh, openclaw-catchup.sh
 │   ├── flight-triage-*.sh
 │   ├── nc-mail-sync-accounts.sh, mail-gates.sh
 │   ├── install-to-openclaw.sh, Makefile
 │   ├── publish-gates.sh, scrub-for-publish.sh
 │   └── validate-*.sh
 ├── skills/skylight/, skills/email-intelligence/, skills/flight-triage/
-└── docs/                              # SETUP, GATES, ALFRED-STACK, plans/
+└── docs/                              # SETUP, GATES, OPENCLAW-STACK, plans/
 ```
 
 Install symlinks repo scripts → `~/.openclaw/scripts/` and skills → `~/.openclaw/workspace/skills/`.

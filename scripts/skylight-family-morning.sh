@@ -10,7 +10,7 @@ FID="$SKYLIGHT_FRAME_ID"
 TODAY=$(date +%F)
 TOMORROW=$(date -d tomorrow +%F 2>/dev/null || python3 -c "from datetime import date,timedelta; print((date.today()+timedelta(days=1)).isoformat())")
 WEEK=$(date -d '+7 days' +%F 2>/dev/null || python3 -c "from datetime import date,timedelta; print((date.today()+timedelta(days=7)).isoformat())")
-GROCERY_ID="${SKYLIGHT_DEFAULT_GROCERY_LIST_ID:-5948982}"
+GROCERY_ID="${SKYLIGHT_DEFAULT_GROCERY_LIST_ID:-}"
 
 python3 <<PY
 import json, os, subprocess, urllib.request
@@ -30,7 +30,13 @@ if not auth:
     raise SystemExit("missing SKYLIGHT_AUTHORIZATION")
 api = os.environ.get("SKYLIGHT_API_URL", "https://app.ourskylight.com/api")
 
-PERSON_ORDER = ["Phoebe", "Wesley", "Dan", "Family", "Other"]
+model_path = os.environ.get("HOUSEHOLD_MODEL_JSON", "")
+PERSON_ORDER = ["Family", "Other"]
+if model_path and os.path.isfile(model_path):
+    model = json.load(open(model_path))
+    kids = list((model.get("kid_categories") or {}).values())
+    parents = list((model.get("parent_categories") or {}).values())
+    PERSON_ORDER = kids + parents + ["Family", "Other"]
 
 def curl_json(path):
     req = urllib.request.Request(

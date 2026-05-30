@@ -62,12 +62,12 @@ src = curl_json(f"/frames/{fid}/source_calendars")
 audit["data"]["source_calendars"] = src
 cal_data = src.get("data") or []
 default_cal = [c for c in cal_data if (c.get("attributes") or {}).get("default_for_new_events")]
-daniel_id = os.environ.get("SKYLIGHT_DEFAULT_CALENDAR_ID", "")
+default_cal_id = os.environ.get("SKYLIGHT_DEFAULT_CALENDAR_ID", "")
 gates["V-3"] = {
     "pass": len(cal_data) >= 5,
     "count": len(cal_data),
     "default_calendar_id": default_cal[0]["id"] if default_cal else None,
-    "alfred_env_calendar_id": daniel_id,
+    "env_default_calendar_id": default_cal_id,
 }
 
 chores = cli_json("chores", "listChores", "--frame-id", fid, "--after", today, "--before", week_end)

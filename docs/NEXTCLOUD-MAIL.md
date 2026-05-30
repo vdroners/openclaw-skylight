@@ -1,6 +1,6 @@
 # Nextcloud Mail
 
-Three Gmail accounts for Alfred: **family** (read-only enrich), **ops** and **work** (digest + urgent + draft/send).
+Three Gmail accounts for OpenClaw: **family** (read-only enrich), **ops** and **work** (digest + urgent + draft/send).
 
 ## Setup (3 accounts)
 

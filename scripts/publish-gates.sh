@@ -22,7 +22,7 @@ done < <(find . -type f ! -path './.git/*' 2>/dev/null)
 [[ "$FAIL" -eq 0 ]] && pass S2 "no oversized tracked files"
 
 # S3: .env.example + no tracked .env
-for v in SKYLIGHT_FRAME_ID SKYLIGHT_EMAIL SKYLIGHT_PASSWORD NEXTCLOUD_URL NEXTCLOUD_USER NEXTCLOUD_PASS SKYLIGHT_FAMILY_TALK_ROOM FAMILY_GMAIL_ADDRESS; do
+for v in SKYLIGHT_FRAME_ID SKYLIGHT_EMAIL SKYLIGHT_PASSWORD NEXTCLOUD_URL NEXTCLOUD_USER NEXTCLOUD_PASS SKYLIGHT_FAMILY_TALK_ROOM FAMILY_GMAIL_ADDRESS OPENCLAW_AGENT_MENTION; do
   grep -q "^${v}=" .env.example 2>/dev/null || fail S3 "missing $v in .env.example"
 done
 if git ls-files --error-unmatch .env >/dev/null 2>&1; then

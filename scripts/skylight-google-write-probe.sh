@@ -22,7 +22,7 @@ api = os.environ["SKYLIGHT_API_URL"]
 auth = os.environ["SKYLIGHT_AUTHORIZATION"]
 tz = os.environ.get("SKYLIGHT_TIMEZONE", "America/Los_Angeles")
 tomorrow = (date.today() + timedelta(days=1)).isoformat()
-summary = "Alfred smoke: calendar write probe"
+summary = "OpenClaw smoke: calendar write probe"
 payload = {
     "summary": summary,
     "starts_at": f"{tomorrow}T09:00:00.000-07:00",

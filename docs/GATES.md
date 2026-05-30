@@ -23,17 +23,17 @@ Run `scripts/skylight-household-gates.sh` locally and `scripts/publish-gates.sh`
 
 | Gate | Test |
 |------|------|
-| C1 | `@alfred add milk to grocery` → proposal only |
-| C2 | `@alfred what's on the calendar Saturday?` → read-only |
+| C1 | `@openclaw add milk to grocery` → proposal only |
+| C2 | `@openclaw what's on the calendar Saturday?` → read-only |
 | S0 | `SIGN-OFF household audit` in Family Hub |
 
-## Flight triage gates (Alfred + NC Ardupilot Triage)
+## Flight triage gates (OpenClaw + NC Ardupilot Triage)
 
 | Gate | Command |
 |------|---------|
-| G-ALF-01..04 | `bash scripts/alfred-flight-triage-gates.sh` |
+| G-ALF-01..04 | `bash scripts/openclaw-flight-triage-gates.sh` |
 | G-AT-* | `docker exec -u www-data cloud_app php .../nc_ardupilot_triage/tools/triage-api-gates.php` |
-| G-WKR-* | `bash /media/4TB/nc-gcs/services/triage-worker/scripts/worker-gates.sh` |
+| G-WKR-* | `bash path/to/triage-worker/scripts/worker-gates.sh` (operator-local NC-GCS) |
 
 ## Publish gates
 
@@ -76,7 +76,7 @@ Household aggregator calls `mail-gates.sh --check` unless `--skip-mail` is passe
 | G3 | dispatch + reply-handler executable; non-proposal exits 2 |
 | G4 | Bot in Family Hub + Ops rooms; relay reachable |
 
-Integrated in `alfred-ai-gates.sh` as **TR-ALL**.
+Integrated in `openclaw-ai-gates.sh` as **TR-ALL**.
 
 ## Chore gates
 
@@ -88,7 +88,7 @@ Integrated in `alfred-ai-gates.sh` as **TR-ALL**.
 
 See [plans/skylight_chore_organization.md](plans/skylight_chore_organization.md).
 
-## Alfred AI gates (`alfred-ai-gates.sh --check`)
+## OpenClaw AI gates (`openclaw-ai-gates.sh --check`)
 
 | Gate | PASS criteria |
 |------|---------------|

@@ -12,14 +12,14 @@ bash scripts/skylight-household-propose.sh --email-only --limit 4
 Approve in Family Hub:
 
 ```
-@alfred YES enrich-chore-001
-@alfred NO enrich-calendar-002
+@openclaw YES enrich-chore-001
+@openclaw NO enrich-calendar-002
 ```
 
 Dispatch (mandatory first step for proposal replies):
 
 ```bash
-bash scripts/skylight-family-hub-dispatch.sh "@alfred NO enrich-chore-001"
+bash scripts/skylight-family-hub-dispatch.sh "@openclaw NO enrich-chore-001"
 ```
 
 Full operator guide: copy from your local `~/.openclaw/docs/SKYLIGHT-HOUSEHOLD-ENRICHMENT.md` after install.

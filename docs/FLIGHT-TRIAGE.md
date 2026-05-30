@@ -1,14 +1,14 @@
-# Alfred flight triage
+# OpenClaw flight triage
 
 ## Scripts
 
 | Script | Role |
 |--------|------|
 | `flight-triage-scan.sh` | Detect new `.bin` under Flight Recordings (DAV PROPFIND) |
-| `flight-triage-propose.sh` | Post Talk card with `@alfred YES triage-<id>` |
+| `flight-triage-propose.sh` | Post Talk card with `@openclaw YES triage-<id>` |
 | `flight-triage-dispatch.sh` | Parse YES/NO |
 | `flight-triage-intake.sh` | Collect intake fields, POST `/api/jobs` |
-| `alfred-flight-triage-gates.sh` | Dry-run gates |
+| `openclaw-flight-triage-gates.sh` | Dry-run gates |
 
 ## Env
 
@@ -19,7 +19,7 @@
 ## Cron
 
 ```bash
-# In alfred-catchup.sh optional path:
+# In openclaw-catchup.sh optional path:
 bash scripts/flight-triage-scan.sh && bash scripts/flight-triage-propose.sh
 ```
 

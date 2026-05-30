@@ -13,10 +13,6 @@ EMAIL="${FAMILY_GMAIL_ADDRESS:-}"
 SECRET_FILE="${FAMILY_GMAIL_SECRET_FILE:-${OPENCLAW_DIR}/.env.d/family-gmail-mail.secret}"
 ACCOUNT_NAME="${FAMILY_MAIL_ACCOUNT_NAME:-Family Gmail}"
 
-if [[ ! -f "$SECRET_FILE" && -f "${OPENCLAW_DIR}/.env.d/daniel-gmail-mail.secret" ]]; then
-  SECRET_FILE="${OPENCLAW_DIR}/.env.d/daniel-gmail-mail.secret"
-fi
-
 AUTH=(-u "$NEXTCLOUD_USER:$NEXTCLOUD_PASS")
 HDRS=(-H "Accept: application/json" -H "OCS-APIREQUEST: true" -H "Content-Type: application/json")
 

@@ -1,6 +1,6 @@
-# Alfred stack — repo vs operator-local
+# OpenClaw stack — repo vs operator-local
 
-This repo is the **canonical source** for Skylight household scripts, mail gates, Talk post helpers, and OpenClaw skills. Some Alfred infrastructure stays operator-local by design.
+This repo is the **canonical source** for Skylight household scripts, mail gates, Talk post helpers, and OpenClaw skills. Some OpenClaw infrastructure stays operator-local by design.
 
 ## From this repo (`install-to-openclaw.sh`)
 
@@ -11,7 +11,7 @@ This repo is the **canonical source** for Skylight household scripts, mail gates
 | Mail | sync, digest, urgent, mail-gates |
 | Recipes | import, batch, curate |
 | Talk helpers | talk-post, talk-response-audit |
-| Gates | household-gates, alfred-ai-gates, mail-gates |
+| Gates | household-gates, openclaw-ai-gates, mail-gates |
 | Skills | skylight, email-intelligence, flight-triage |
 
 ## Operator-local (`~/.openclaw` only)
@@ -31,7 +31,7 @@ This repo is the **canonical source** for Skylight household scripts, mail gates
 bash scripts/talk-response-audit.sh --check --phase all   # Talk ingress
 bash scripts/mail-gates.sh --check
 bash scripts/skylight-household-gates.sh
-bash scripts/alfred-ai-gates.sh --check                 # Cron + TR-ALL
+bash scripts/openclaw-ai-gates.sh --check                 # Cron + TR-ALL
 bash scripts/publish-gates.sh                           # Before git push
 ```
 
@@ -40,7 +40,7 @@ bash scripts/publish-gates.sh                           # Before git push
 | Room | Human messages |
 |------|----------------|
 | `$SKYLIGHT_FAMILY_TALK_ROOM` | Any (plugin path) |
-| `$OPS_TALK_ROOM` | `@alfred` required |
-| Alfred DM | Any (`dmPolicy: open`) |
+| `$OPS_TALK_ROOM` | `@openclaw` required |
+| OpenClaw DM | Any (`dmPolicy: open`) |
 
-See [NEXTCLOUD-TALK.md](NEXTCLOUD-TALK.md) and [plans/alfred_talk_response_fix.md](plans/alfred_talk_response_fix.md).
+See [NEXTCLOUD-TALK.md](NEXTCLOUD-TALK.md) and [plans/openclaw_talk_response_fix.md](plans/openclaw_talk_response_fix.md).

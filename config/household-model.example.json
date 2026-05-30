@@ -19,6 +19,7 @@
   },
   "family_talk_room": "",
   "ops_talk_room": "",
+  "agent_mention": "@openclaw",
   "chore_reward_defaults": {
     "default": 1,
     "deep": 2,
@@ -41,10 +42,14 @@
     "Alex": "Evening block 20:00 for daily routines; periodic chores at 10:00.",
     "Parent": "Monthly deep chores at 10:00, 2 pts each."
   },
-  "mom_chore_canonical": {
-    "clean_shelf": "GROUP_ID_1",
-    "clean_shelf_piano_top": "GROUP_ID_2",
-    "organize_knitting_sewing": "GROUP_ID_3"
+  "parent_chore_dedupe": {
+    "member_label": "Parent",
+    "delete_group_ids": [],
+    "keep_renames": {
+      "GROUP_ID_1": "Clean Shelf",
+      "GROUP_ID_2": "Clean Shelf & Piano Top",
+      "GROUP_ID_3": "Organize Knitting/Sewing"
+    }
   },
   "email_keywords": [
     "lesson", "practice", "game", "tutor", "conference", "appointment"

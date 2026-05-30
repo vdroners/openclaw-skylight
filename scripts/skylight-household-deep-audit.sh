@@ -36,7 +36,7 @@ start60 = today.isoformat()
 
 WRITABLE_CAL_EMAILS = {"family-parent@example.com", "family-kid@example.com"}
 DEFAULT_CAL_EMAIL = "family-parent@example.com"
-KID_CATS = {"19116283": "Phoebe", "19255362": "Wesley", "19177556": "Dan"}
+KID_CATS = {}
 CHORE_TIME_DEFAULTS = {
     "dishes": ("20:00", True),
     "clean room": ("20:00", True),
@@ -134,7 +134,7 @@ for gid, items in groups.items():
         "group_id": gid,
         "summary": summary,
         "category_id": cat_id,
-        "person": KID_CATS.get(cat_id, "Dan" if cat_id == "19177556" else "?"),
+        "person": KID_CATS.get(cat_id, "?"),
         "reward_points": a.get("reward_points"),
         "recurrence_set": a.get("recurrence_set"),
         "routine": routine,
@@ -225,11 +225,11 @@ for e in events:
         if not e["description"]:
             ns = norm_title(summary)
             if "math" in ns or "tutor" in ns:
-                fields["description"] = "Phoebe math tutoring"
-            elif "lesson" in ns and "phoebe" in ns:
-                fields["description"] = "Phoebe lesson — details from email"
-            elif "futsal" in ns or "little stars" in ns:
-                fields["description"] = e["description"] or "Wesley futsal practice"
+                fields["description"] = "Kid tutoring — details from email"
+            elif "lesson" in ns:
+                fields["description"] = "Lesson — details from email"
+            elif "practice" in ns or "game" in ns:
+                fields["description"] = e["description"] or "Sports practice"
             elif "birthday" in ns or "bday" in ns:
                 fields["description"] = "Family birthday"
             else:

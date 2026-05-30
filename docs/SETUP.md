@@ -44,7 +44,7 @@ bash scripts/install-to-openclaw.sh
 
 Symlinks `scripts/` → `~/.openclaw/scripts/` and skills → `~/.openclaw/workspace/skills/`.
 
-Use `--force` to replace local script copies with symlinks. Keep operator wrappers (e.g. a custom `nc-mail-add-daniel-gmail.sh`) outside the symlink path or restore after install.
+Use `--force` to replace local script copies with symlinks. Keep operator wrappers (e.g. a custom `nc-mail-add-family-gmail.sh`) outside the symlink path or restore after install.
 
 ## 4. Nextcloud Mail (three accounts)
 
@@ -87,4 +87,4 @@ Wire Family Hub Talk so proposal replies exec dispatch first:
 bash ~/.openclaw/scripts/skylight-family-hub-dispatch.sh "<message>"
 ```
 
-When the message matches `@alfred YES|NO|EDIT (enrich-*|ask-*)`, dispatch runs the reply handler and posts confirmation to `SKYLIGHT_FAMILY_TALK_ROOM`.
+When the message matches `@openclaw YES|NO|EDIT (enrich-*|ask-*)`, dispatch runs the reply handler and posts confirmation to `SKYLIGHT_FAMILY_TALK_ROOM`.

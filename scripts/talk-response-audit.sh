@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Talk response PASS/FAIL gates for Alfred Nextcloud Talk.
+# Talk response PASS/FAIL gates for OpenClaw Nextcloud Talk.
 # Usage: talk-response-audit.sh --check [--phase baseline|config|relay|dispatch|nc-wiring|all]
 set -euo pipefail
 
@@ -9,6 +9,10 @@ MODEL="${OPENCLAW}/config/household-model.json"
 RELAY="${OPENCLAW}/nc-webhook-relay.py"
 DISPATCH="${OPENCLAW}/scripts/skylight-family-hub-dispatch.sh"
 LOG_DIR="${OPENCLAW}/logs"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/load-agent-env.sh" 2>/dev/null || true
+export OPENCLAW_AGENT_NAME="${OPENCLAW_AGENT_NAME:-openclaw}"
 PHASE="all"
 HARD_FAIL=0
 SOFT_FAIL=0
@@ -155,7 +159,7 @@ gate_relay() {
   grep -q '"deliver": True' "$RELAY" || grep -q '"deliver": true' "$RELAY" \
     && ok "G2-6 deliver true in relay" || bad "G2-6 deliver still false"
 
-  grep -q '_message_mentions_alfred' "$RELAY" \
+  grep -qE '_message_mentions_(openclaw|agent)' "$RELAY" \
     && ok "G2-6b rich mention helper present" || bad "G2-6b rich mention helper missing"
 
   grep -q 'OPEN_ROOMS_NO_RELAY_LLM' "$RELAY" \
@@ -164,8 +168,9 @@ gate_relay() {
   [[ -n "$OPS_ROOM" && -n "$FAMILY_ROOM" ]] || { warn "G2 synthetic tests skipped — room tokens unset"; return; }
 
   python3 - "$OPS_ROOM" "$FAMILY_ROOM" <<'PY' | while read -r line; do
-import json, sys, time, urllib.error, urllib.request
+import json, sys, time, urllib.error, urllib.request, os
 ops, fam = sys.argv[1], sys.argv[2]
+agent = os.environ.get("OPENCLAW_AGENT_NAME", "openclaw")
 uniq = str(int(time.time()))
 
 def post(body):
@@ -196,14 +201,14 @@ evt = lambda msg, token: {
 checks = []
 st, _ = post(evt("gateway looks fine", ops))
 checks.append(("G2-5", st == 204, f"plain ops HTTP {st}"))
-st, _ = post(evt("@alfred what is for dinner", fam))
+st, _ = post(evt(f"@{agent} what is for dinner", fam))
 checks.append(("G2-4", st == 204, f"family relay skip HTTP {st}"))
 st, _ = post({
     "event": {
         "class": "OCA\\Talk\\Events\\MessageSentEvent",
         "message": {
             "message": f"Hey {{mention-user1}} please help {uniq}",
-            "parsedMessage": f"Hey Alfred please help {uniq}",
+            "parsedMessage": f"Hey {agent.title()} please help {uniq}",
         },
         "actor": {"id": "NCAdmin"},
     },
@@ -211,17 +216,17 @@ st, _ = post({
 })
 checks.append(("G2-3", st in (200, 502), f"rich mention HTTP {st}"))
 
-st, body = post(evt("@alfred NO enrich-chore-023", fam))
+st, body = post(evt(f"@{agent} NO enrich-chore-023", fam))
 checks.append(("G2-7", st == 200 and "household-dispatch" in body, f"T5 YES/NO fast-path HTTP {st}"))
 
-spam = f"@alfred gate-rate {uniq}"
+spam = f"@{agent} gate-rate {uniq}"
 st1, _ = post(evt(spam, ops))
 st2, body2 = post(evt(spam, ops))
 checks.append(("G2-8b", st2 == 429, f"identical mention rate-limit HTTP {st2}"))
 
 time.sleep(4)
-st3, _ = post(evt(f"@alfred gate-spaced-a {uniq}", ops))
-st4, _ = post(evt(f"@alfred gate-spaced-b {uniq}", ops))
+st3, _ = post(evt(f"@{agent} gate-spaced-a {uniq}", ops))
+st4, _ = post(evt(f"@{agent} gate-spaced-b {uniq}", ops))
 checks.append(("G2-8", st3 != 429 and st4 != 429, f"T9 spaced mentions HTTP {st3}/{st4}"))
 for gate, ok, msg in checks:
     print(f"{'PASS' if ok else 'FAIL'} {gate} {msg}")

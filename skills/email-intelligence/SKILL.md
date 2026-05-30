@@ -1,6 +1,6 @@
 ---
 name: email-intelligence
-description: "Read, summarize, and triage emails from Alfred's Nextcloud Mail account(s). Detect urgent items, draft replies, and generate daily digests. Account and inbox are discovered at runtime; no hardcoded IDs."
+description: "Read, summarize, and triage emails from OpenClaw agent Nextcloud Mail account(s). Detect urgent items, draft replies, and generate daily digests. Account and inbox are discovered at runtime; no hardcoded IDs."
 metadata:
   openclaw:
     emoji: "mail"
@@ -27,7 +27,7 @@ HDRS=(-H "Accept: application/json" -H "OCS-APIREQUEST: true")
 NC="$NEXTCLOUD_URL"
 ```
 
-## Account role routing (3-account Alfred setup)
+## Account role routing (3-account OpenClaw setup)
 
 | Role | Gmail (example) | Env ID | Env address | Use |
 |------|-----------------|--------|-------------|-----|
@@ -41,7 +41,7 @@ Automations: `email-daily-digest-post.sh` and `email-urgent-scan.sh` default to 
 
 ## Discover account and INBOX (run first every turn)
 
-Optional: `FAMILY_MAIL_ACCOUNT_ID=8` pins daniel family Gmail for household enrichment.
+Optional: set `FAMILY_MAIL_ACCOUNT_ID` to pin the family account for household enrichment.
 
 ```bash
 # List all accounts (multi-account)

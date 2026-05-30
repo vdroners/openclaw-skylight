@@ -18,7 +18,7 @@ cat > "${STATE_DIR}/batch-latest.json" <<EOF
 EOF
 
 MSG="Flight log ready for triage: ${BIN_PATH}
-Reply: @alfred YES ${PID} | NO ${PID}"
+Reply: @openclaw YES ${PID} | NO ${PID}"
 
 if [[ -x "${SCRIPT_DIR}/talk-post.sh" ]]; then
 	"${SCRIPT_DIR}/talk-post.sh" "${FLIGHT_TRIAGE_TALK_ROOM:-}" "$MSG" || echo "$MSG"

@@ -104,7 +104,7 @@ for i, p in enumerate(proposals, 1):
             f"Proposal {pid} ({i}/{total}) — ENRICH CALENDAR [{src}]\\n"
             f"Event: {p.get('summary')}\\n"
             f"Change: {fl or 'enrich fields'}\\n"
-            f"Reply: @alfred YES {pid} | NO {pid}"
+            f"Reply: @openclaw YES {pid} | NO {pid}"
         )
     elif pid.startswith("enrich-chore"):
         f = p.get("fields") or {}
@@ -112,14 +112,14 @@ for i, p in enumerate(proposals, 1):
             f"Proposal {pid} ({i}/{total}) — ENRICH CHORE\\n"
             f"Chore: {p.get('summary')} ({p.get('person')})\\n"
             f"Change: start_time={f.get('start_time')} routine={f.get('routine')}\\n"
-            f"Reply: @alfred YES {pid} | NO {pid}"
+            f"Reply: @openclaw YES {pid} | NO {pid}"
         )
     else:
         cards.append(
             f"Proposal {pid} ({i}/{total}) — NEEDS YOU\\n"
             f"Calendar: {p.get('title')!r}\\n"
             f"Questions: {'; '.join(p.get('questions') or [])}\\n"
-            f"Reply: @alfred EDIT {pid} <your answer> | NO {pid}\\n"
+            f"Reply: @openclaw EDIT {pid} <your answer> | NO {pid}\\n"
             f"(Unanswered 7d → deferred, calendar unchanged)"
         )
 

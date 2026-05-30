@@ -44,8 +44,8 @@ jobs:
     tz: America/Los_Angeles
 
   - id: c924d4ec-a108-475b-9a0e-bd6f8db87b23
-    name: alfred-self-watchdog
-    script: ~/.openclaw/scripts/alfred-self-watchdog-post.sh
+    name: openclaw-self-watchdog
+    script: ~/.openclaw/scripts/openclaw-self-watchdog-post.sh
     success_grep: watchdog
     schedule: "0 */4 * * *"
     tz: America/Los_Angeles

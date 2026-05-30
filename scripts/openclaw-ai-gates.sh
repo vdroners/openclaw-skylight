@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Alfred AI-layer gates — hard_fail on critical cron reliability (shell-direct + OpenClaw).
-# Usage: alfred-ai-gates.sh --check
+# OpenClaw AI-layer gates — hard_fail on critical cron reliability (shell-direct + OpenClaw).
+# Usage: openclaw-ai-gates.sh --check
 set -euo pipefail
 
 OPENCLAW="${OPENCLAW_DIR:-$HOME/.openclaw}"
@@ -105,7 +105,7 @@ if [[ -f "$BATCH" ]]; then
   TEST_PID=$(python3 -c "import json; b=json.load(open('$BATCH')); p=next((x['id'] for x in b.get('proposals',[]) if x.get('status') in ('pending','rejected') and str(x.get('id','')).startswith('enrich-chore')), None); print(p or '')" 2>/dev/null || echo "")
 fi
 if [[ -n "$TEST_PID" ]]; then
-  if bash "${OPENCLAW}/scripts/skylight-family-hub-dispatch.sh" --dry-run "@alfred NO ${TEST_PID}" >/tmp/ai-dis1.out 2>&1 \
+  if bash "${OPENCLAW}/scripts/skylight-family-hub-dispatch.sh" --dry-run "@openclaw NO ${TEST_PID}" >/tmp/ai-dis1.out 2>&1 \
     && grep -qE 'DRY-RUN C1b:|Gate C1b:' /tmp/ai-dis1.out; then
     ok "DIS-1 dispatch dry-run NO ${TEST_PID}"
   else
@@ -116,7 +116,7 @@ else
 fi
 
 # DIS-3: non-match exits 2
-if bash "${OPENCLAW}/scripts/skylight-family-hub-dispatch.sh" "@alfred what's for dinner?" >/dev/null 2>&1; then
+if bash "${OPENCLAW}/scripts/skylight-family-hub-dispatch.sh" "@openclaw what's for dinner?" >/dev/null 2>&1; then
   bad "DIS-3 non-proposal should exit 2"
 else
   rc=$?

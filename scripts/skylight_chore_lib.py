@@ -11,7 +11,15 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
-KID_CATS = {"19116283", "19255362", "19177556"}
+KID_CATS: set[str] = set()
+
+
+def kid_categories(model: dict[str, Any]) -> dict[str, str]:
+    return {str(k): str(v) for k, v in (model.get("kid_categories") or {}).items()}
+
+
+def kid_category_ids(model: dict[str, Any]) -> set[str]:
+    return set(kid_categories(model).keys()) or set(KID_CATS)
 
 
 def norm_title(s: str | None) -> str:
@@ -97,18 +105,20 @@ def build_enrichment(
     row: dict[str, Any],
     time_defaults: dict[str, tuple[str, bool]],
     reward_cfg: dict[str, int],
+    kid_ids: set[str] | None = None,
 ) -> dict[str, Any] | None:
     """Return fields to apply, or None if row is already complete."""
     fields: dict[str, Any] = {}
     ns = norm_title(row.get("summary"))
     cat = str(row.get("category_id") or "")
+    kid_ids = kid_ids or set()
 
     if not row.get("start_time"):
         td = lookup_time_defaults(ns, time_defaults) or infer_from_rrule(row)
         if td:
             fields["start_time"] = td[0]
             fields["routine"] = td[1]
-    elif cat in KID_CATS and not row.get("routine"):
+    elif cat in kid_ids and not row.get("routine"):
         td = lookup_time_defaults(ns, time_defaults)
         if td and td[1]:
             fields["routine"] = True
@@ -147,7 +157,9 @@ def sync_rrule(recurrence_set: list[str] | None, byhour: int, routine: bool) -> 
     return out or [f"RRULE:FREQ=DAILY;INTERVAL=1;WKST=MO;BYHOUR={byhour}"]
 
 
-def list_chore_series(frame_id: str, days: int = 60) -> list[dict[str, Any]]:
+def list_chore_series(frame_id: str, days: int = 60, model: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    model = model or {}
+    person_map = kid_categories(model)
     start = date.today().isoformat()
     end = (date.today() + timedelta(days=days)).isoformat()
     out = subprocess.check_output(
@@ -167,7 +179,7 @@ def list_chore_series(frame_id: str, days: int = 60) -> list[dict[str, Any]]:
         gid = str(a.get("group") or c["id"].split("-")[0])
         groups.setdefault(gid, []).append(c)
 
-    kid_cats = KID_CATS  # noqa — caller may override via model
+    kid_cats = kid_category_ids(model)
     rows: list[dict[str, Any]] = []
     for gid, items in groups.items():
         i = items[0]
@@ -178,7 +190,7 @@ def list_chore_series(frame_id: str, days: int = 60) -> list[dict[str, Any]]:
             "group_id": gid,
             "summary": a.get("summary") or "",
             "category_id": cat_id,
-            "person": {"19116283": "Phoebe", "19255362": "Wesley", "19177556": "Dan"}.get(cat_id, "?"),
+            "person": person_map.get(cat_id, "?"),
             "reward_points": a.get("reward_points"),
             "recurrence_set": a.get("recurrence_set"),
             "routine": a.get("routine"),

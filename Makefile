@@ -28,10 +28,10 @@ talk-gates:
 	bash scripts/talk-response-audit.sh --check --phase all
 
 ai-gates:
-	bash scripts/alfred-ai-gates.sh --check
+	bash scripts/openclaw-ai-gates.sh --check
 
 chore-fill-dry:
 	bash scripts/skylight-chores-fill-blanks.sh --dry-run
 
 chore-dedupe-dry:
-	bash scripts/skylight-chores-dedupe-mom.sh --dry-run
+	bash scripts/skylight-chores-dedupe-parent.sh --dry-run

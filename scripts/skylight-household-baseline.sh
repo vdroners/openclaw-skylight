@@ -27,7 +27,7 @@ lines = [
     f"Proposed chore time fixes: {m.get('enrich_chores_count', '?')}",
     f"Proposed calendar enrichments: {m.get('enrich_calendar_count', '?')}",
     "",
-    "Proposals coming next. Reply @alfred YES <proposal-id> when cards post.",
+    "Proposals coming next. Reply @openclaw YES <proposal-id> when cards post.",
 ]
 print("\n".join(lines))
 PY

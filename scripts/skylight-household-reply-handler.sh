@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Parse Family Hub replies: @alfred YES|NO|EDIT <proposal-id> [text]
+# Parse Family Hub replies: @openclaw YES|NO|EDIT <proposal-id> [text]
 # Usage: skylight-household-reply-handler.sh [--dry-run] "message text"
 set -euo pipefail
 
@@ -21,7 +21,7 @@ STATE_DIR="${OPENCLAW_DIR:-$HOME/.openclaw}/state/household-proposals"
 BATCH="${STATE_DIR}/batch-latest.json"
 ROOM="${SKYLIGHT_FAMILY_TALK_ROOM:-}"
 
-export BATCH ROOM SCRIPT_DIR MSG DRY
+export BATCH ROOM SCRIPT_DIR MSG DRY OPENCLAW_AGENT_NAME
 
 python3 <<'PY'
 import json, os, re, subprocess, sys
@@ -33,9 +33,10 @@ batch_path = Path(os.environ["BATCH"])
 room = os.environ["ROOM"]
 script_dir = os.environ["SCRIPT_DIR"]
 dry = int(os.environ.get("DRY", "0"))
+agent = os.environ.get("OPENCLAW_AGENT_NAME", "openclaw")
 
 m = re.search(
-    r"@alfred\s+(YES|NO|EDIT)\s+(enrich-calendar-\d+|enrich-chore-\d+|ask-\d+)(?:\s+(.*))?",
+    rf"@{re.escape(agent)}\s+(YES|NO|EDIT)\s+(enrich-calendar-\d+|enrich-chore-\d+|ask-\d+)(?:\s+(.*))?",
     msg, re.I,
 )
 if not m:

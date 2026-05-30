@@ -48,9 +48,20 @@
       "type": "object",
       "additionalProperties": { "type": "string" }
     },
-    "mom_chore_canonical": {
+    "parent_chore_dedupe": {
       "type": "object",
-      "additionalProperties": { "type": "string" }
+      "description": "Optional dedupe config: delete_group_ids, keep_renames, member_label",
+      "properties": {
+        "member_label": { "type": "string" },
+        "delete_group_ids": { "type": "array", "items": { "type": "string" } },
+        "keep_renames": { "type": "object", "additionalProperties": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "agent_mention": {
+      "type": "string",
+      "description": "Talk mention alias for proposal replies (default @openclaw)",
+      "pattern": "^@"
     },
     "email_keywords": {
       "type": "array",
