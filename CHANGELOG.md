@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-05-30
+
+### Added
+
+- Talk relay synthetic gates G2-7 (T5 YES/NO fast-path), G2-8/G2-8b (T9 spacing + rate limit)
+
+### Changed
+
+- `make gates` passes `--skip-mail` to household gates so mail runs once (~2 min faster)
+- `skylight-household-gates.sh` accepts `--skip-mail`
+
 ## [0.1.4] - 2026-05-30
 
 ### Fixed

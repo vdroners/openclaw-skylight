@@ -38,11 +38,11 @@ bash ~/.openclaw/scripts/alfred-ai-gates.sh --check
 | T2 | Ops | Reply to `@alfred` | Partial (G2-3 relay 200) | 2026-05-30 |
 | T3 | Ops | UI @-chip reply | Pending (manual UI) | |
 | T4 | Family Hub | Reply to plain question | Pending (manual UI) | |
-| T5 | Family Hub | YES/NO fast-path | Pending (manual UI) | |
+| T5 | Family Hub | YES/NO fast-path | Partial (G2-7 relay 200) | 2026-05-30 |
 | T6 | Alfred DM | Reply to hello | Pending (manual UI) | |
 | T7 | Ops | Cron post, no agent follow-up | Pending (manual UI) | |
 | T8 | Family Hub | Single reply (no double) | Partial (G2-4 skip) | 2026-05-30 |
-| T9 | Ops | Two `@alfred` msgs 5s apart | Pending (manual UI) | |
+| T9 | Ops | Two `@alfred` msgs 5s apart | Partial (G2-8 relay) | 2026-05-30 |
 
 ## Config changes summary
 

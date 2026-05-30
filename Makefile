@@ -5,7 +5,9 @@ OPENCLAW_DIR ?= $(HOME)/.openclaw
 install:
 	bash scripts/install-to-openclaw.sh --force
 
-gates: scrub publish household-gates mail-gates talk-gates ai-gates
+gates: scrub publish
+	bash scripts/skylight-household-gates.sh --skip-mail
+	$(MAKE) mail-gates talk-gates ai-gates
 
 scrub:
 	bash scripts/scrub-for-publish.sh

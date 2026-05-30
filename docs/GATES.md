@@ -63,7 +63,7 @@ Run `scripts/skylight-household-gates.sh` locally and `scripts/publish-gates.sh`
 | MAIL-DIGEST | `email-daily-digest-post.sh --dry-run` exit 0 |
 | MAIL-URGENT | `email-urgent-scan.sh` exit 0, JSON line |
 
-Household aggregator calls `mail-gates.sh --check` (no account apply during full household run).
+Household aggregator calls `mail-gates.sh --check` unless `--skip-mail` is passed (`make gates` uses `--skip-mail` so mail runs once).
 
 ## Talk response gates (`talk-response-audit.sh --check`)
 
@@ -71,7 +71,7 @@ Household aggregator calls `mail-gates.sh --check` (no account apply during full
 |------|---------------|
 | G0 | Gateway + relay active; ports 8788/8789/18789; hooks token |
 | G1 | Ops room requireMention true; Family Hub false; rich mentionPatterns |
-| G2 | Relay deliver true; mention helper; Family Hub skips relay LLM |
+| G2 | Relay deliver true; mention helper; Family Hub skips relay LLM; T5/T9 synthetic |
 | G3 | dispatch + reply-handler executable; non-proposal exits 2 |
 | G4 | Bot in Family Hub + Ops rooms; relay reachable |
 

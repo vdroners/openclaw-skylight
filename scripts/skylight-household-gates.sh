@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run household audit gate matrix. Usage: gates.sh [--report-all] [--skip-live]
+# Run household audit gate matrix. Usage: gates.sh [--skip-live] [--skip-mail]
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -10,7 +10,13 @@ AUDIT=$(ls -1t "${LOG_DIR}"/skylight-household-audit-*.json 2>/dev/null | head -
 BATCH="${STATE_DIR}/batch-latest.json"
 FAIL=0
 SKIP_LIVE=0
-[[ "${1:-}" == "--skip-live" ]] && SKIP_LIVE=1
+SKIP_MAIL=0
+for arg in "$@"; do
+  case "$arg" in
+    --skip-live) SKIP_LIVE=1 ;;
+    --skip-mail) SKIP_MAIL=1 ;;
+  esac
+done
 
 pass() { echo "Gate $1: PASS — $2"; }
 fail() { echo "Gate $1: FAIL — $2"; FAIL=1; }
@@ -71,11 +77,15 @@ if [[ "$SKIP_LIVE" -eq 0 ]]; then
     fail W-2 "$(tail -1 /tmp/hh-w2.out)"
   fi
 
-  if bash "${SCRIPT_DIR}/mail-gates.sh" --check >/tmp/hh-mail.out 2>&1; then
-    grep '^Gate ' /tmp/hh-mail.out || true
+  if [[ "$SKIP_MAIL" -eq 0 ]]; then
+    if bash "${SCRIPT_DIR}/mail-gates.sh" --check >/tmp/hh-mail.out 2>&1; then
+      grep '^Gate ' /tmp/hh-mail.out || true
+    else
+      grep '^Gate ' /tmp/hh-mail.out >&2 || cat /tmp/hh-mail.out >&2
+      fail MAIL "$(grep 'hard_fail=' /tmp/hh-mail.out | tail -1 || tail -1 /tmp/hh-mail.out)"
+    fi
   else
-    grep '^Gate ' /tmp/hh-mail.out >&2 || cat /tmp/hh-mail.out >&2
-    fail MAIL "$(grep 'hard_fail=' /tmp/hh-mail.out | tail -1 || tail -1 /tmp/hh-mail.out)"
+    warn MAIL "skipped (--skip-mail; run make mail-gates or mail-gates.sh --check)"
   fi
 else
   warn W-1 "skipped (--skip-live)"

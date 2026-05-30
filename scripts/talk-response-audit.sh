@@ -210,6 +210,19 @@ st, _ = post({
     "room": {"token": ops},
 })
 checks.append(("G2-3", st in (200, 502), f"rich mention HTTP {st}"))
+
+st, body = post(evt("@alfred NO enrich-chore-023", fam))
+checks.append(("G2-7", st == 200 and "household-dispatch" in body, f"T5 YES/NO fast-path HTTP {st}"))
+
+spam = f"@alfred gate-rate {uniq}"
+st1, _ = post(evt(spam, ops))
+st2, body2 = post(evt(spam, ops))
+checks.append(("G2-8b", st2 == 429, f"identical mention rate-limit HTTP {st2}"))
+
+time.sleep(4)
+st3, _ = post(evt(f"@alfred gate-spaced-a {uniq}", ops))
+st4, _ = post(evt(f"@alfred gate-spaced-b {uniq}", ops))
+checks.append(("G2-8", st3 != 429 and st4 != 429, f"T9 spaced mentions HTTP {st3}/{st4}"))
 for gate, ok, msg in checks:
     print(f"{'PASS' if ok else 'FAIL'} {gate} {msg}")
 PY
