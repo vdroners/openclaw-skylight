@@ -6,6 +6,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR}/load-nextcloud-env.sh" 2>/dev/null || true
 source "${SCRIPT_DIR}/load-skylight-env.sh" 2>/dev/null || true
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/nc-http-retry.sh" 2>/dev/null || true
 
 OPENCLAW_DIR="${OPENCLAW_DIR:-$HOME/.openclaw}"
 FAIL=0
@@ -19,6 +21,14 @@ warn() { echo "Gate $1: WARN — $2"; }
 bash "${SCRIPT_DIR}/validate-mail-secrets.sh" && pass SEC "validate-mail-secrets" || FAIL=1
 bash "${SCRIPT_DIR}/validate-mail-accounts.sh" || FAIL=1
 
+if declare -F nc_wait_mail_api >/dev/null 2>&1; then
+  if nc_wait_mail_api; then
+    pass MAIL-READY "mail API ready"
+  else
+    fail MAIL-READY "mail API not ready (503/502 — is cloud_taskworker healthy?)"
+  fi
+fi
+
 SYNC_MODE="--check"
 [[ "$CHECK_ONLY" -eq 0 ]] && SYNC_MODE="--apply"
 if bash "${SCRIPT_DIR}/nc-mail-sync-accounts.sh" $SYNC_MODE >/tmp/mail-sync.out 2>&1; then
@@ -31,14 +41,16 @@ fi
 # MAIL-CSRF probe
 AUTH=(-u "$NEXTCLOUD_USER:$NEXTCLOUD_PASS")
 HDRS=(-H "Accept: application/json" -H "OCS-APIREQUEST: true")
-if curl -sS -o /dev/null -w '%{http_code}' "${AUTH[@]}" "$NEXTCLOUD_URL/index.php/apps/mail/api/accounts" | grep -qE '^[45]'; then
-  if curl -sS -o /dev/null -w '%{http_code}' "${AUTH[@]}" -H "OCS-APIREQUEST: true" "$NEXTCLOUD_URL/index.php/apps/mail/api/accounts" | grep -qE '^2'; then
-    pass MAIL-CSRF "OCS-APIREQUEST header required"
-  else
-    fail MAIL-CSRF "API unreachable with header"
-  fi
-else
+no_ocs=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "${AUTH[@]}" \
+  "$NEXTCLOUD_URL/index.php/apps/mail/api/accounts" 2>/dev/null || echo 000)
+with_ocs=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "${AUTH[@]}" "${HDRS[@]}" \
+  "$NEXTCLOUD_URL/index.php/apps/mail/api/accounts" 2>/dev/null || echo 000)
+if [[ "$no_ocs" =~ ^4 ]] && [[ "$with_ocs" =~ ^2 ]]; then
+  pass MAIL-CSRF "OCS-APIREQUEST header required"
+elif [[ "$with_ocs" =~ ^2 ]]; then
   pass MAIL-CSRF "accounts API ok"
+else
+  fail MAIL-CSRF "accounts API HTTP no_ocs=$no_ocs with_ocs=$with_ocs"
 fi
 
 # MAIL-ROUTE: env vs state
@@ -78,7 +90,7 @@ for role_env in "ops:OPS_MAIL_ACCOUNT_ID" "work:WORK_MAIL_ACCOUNT_ID"; do
   aid="${!env_key:-}"
   gate="MAIL-SMTP-${role^^}"
   [[ -n "$aid" ]] || { fail "$gate" "missing $env_key"; continue; }
-  smtp=$(curl -sS "${AUTH[@]}" "${HDRS[@]}" -H "Accept: application/json" \
+  smtp=$(nc_curl_retry "${AUTH[@]}" "${HDRS[@]}" -H "Accept: application/json" \
     "$NEXTCLOUD_URL/index.php/apps/mail/api/accounts/$aid" \
     | python3 -c "import sys,json; d=json.load(sys.stdin); print((d.get('smtpHost') or d.get('data',{}).get('smtpHost') or ''))" 2>/dev/null || echo "")
   if [[ -n "$smtp" ]]; then

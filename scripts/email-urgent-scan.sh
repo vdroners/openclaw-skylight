@@ -42,7 +42,7 @@ def nc_get(path, retries=12):
                 return json.loads(resp.read().decode())
         except urllib.error.HTTPError as e:
             last_err = e
-            if e.code == 409 and attempt + 1 < retries:
+            if e.code in (503, 502, 409) and attempt + 1 < retries:
                 time.sleep(min(3.0, 0.5 * (attempt + 1)))
                 continue
             if e.code == 409:

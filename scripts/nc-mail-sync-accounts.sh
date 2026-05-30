@@ -36,7 +36,9 @@ auth_pass = os.environ.get("NEXTCLOUD_PASS", "")
 import base64
 auth_hdr = base64.b64encode(f"{auth_user}:{auth_pass}".encode()).decode()
 
-def nc_request(method, path, body=None, headers_extra=None):
+def nc_request(method, path, body=None, headers_extra=None, retries=12):
+    import time
+    import urllib.error
     hdrs = {
         "Authorization": f"Basic {auth_hdr}",
         "Accept": "application/json",
@@ -47,9 +49,23 @@ def nc_request(method, path, body=None, headers_extra=None):
     if headers_extra:
         hdrs.update(headers_extra)
     data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(f"{nc}{path}", data=data, headers=hdrs, method=method)
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        return resp.status, json.loads(resp.read().decode() or "{}")
+    delay = 1
+    last_err = None
+    for attempt in range(retries):
+        req = urllib.request.Request(f"{nc}{path}", data=data, headers=hdrs, method=method)
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                return resp.status, json.loads(resp.read().decode() or "{}")
+        except urllib.error.HTTPError as e:
+            last_err = e
+            if e.code in (503, 502, 409) and attempt + 1 < retries:
+                time.sleep(min(delay, 6))
+                delay += 1
+                continue
+            raise
+    if last_err:
+        raise last_err
+    raise RuntimeError("nc_request failed")
 
 def list_accounts():
     st, data = nc_request("GET", "/index.php/apps/mail/api/accounts")

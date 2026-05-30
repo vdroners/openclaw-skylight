@@ -57,6 +57,7 @@ Run `scripts/skylight-household-gates.sh` locally and `scripts/publish-gates.sh`
 | MAIL-STATE | `state/mail-account-ids.json` has all 3 roles |
 | MAIL-ROUTE | Env `*_MAIL_ACCOUNT_ID` matches state |
 | MAIL-CSRF | Mail API requires `OCS-APIREQUEST: true` |
+| MAIL-READY | Mail accounts API responds 2xx (retries 503 during taskworker warm-up) |
 | E2 / E2-S | Family enrich scan <60s on pinned family account |
 | E2-ISOLATE | Enrich uses family ID only |
 | MAIL-SMTP-OPS / MAIL-SMTP-WORK | Account detail includes `smtpHost` |

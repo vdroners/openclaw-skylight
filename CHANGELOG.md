@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-05-30
+
+### Fixed
+
+- Mail gates no longer false-fail on transient HTTP 503 when Nextcloud Mail taskworker is warming up
+- New `nc-http-retry.sh`: `nc_wait_mail_api` + `nc_curl_retry` (503/502/409 backoff)
+- Retry added to `nc-mail-sync-accounts`, `email-urgent-scan`, `skylight-email-enrich-scan`
+- MAIL-CSRF gate reports explicit status codes instead of generic "unreachable"
+
 ## [0.1.5] - 2026-05-30
 
 ### Added

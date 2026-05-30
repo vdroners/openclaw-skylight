@@ -5,6 +5,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR}/load-nextcloud-env.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/nc-http-retry.sh"
 
 LOG_DIR="${OPENCLAW_DIR:-$HOME/.openclaw}/logs"
 AUDIT=$(ls -1t "${LOG_DIR}"/skylight-household-audit-*.json 2>/dev/null | head -1)
@@ -16,8 +18,10 @@ HDRS=(-H "Accept: application/json" -H "OCS-APIREQUEST: true")
 FAMILY_EMAIL="${FAMILY_GMAIL_ADDRESS:-}"
 MAIL_ACCOUNT="${FAMILY_MAIL_ACCOUNT_ID:-}"
 
+nc_wait_mail_api || { echo "Gate E2: FAIL — mail API not ready" >&2; exit 1; }
+
 if [[ -z "$MAIL_ACCOUNT" && -n "$FAMILY_EMAIL" ]]; then
-  MAIL_ACCOUNT=$(curl -sS "${AUTH[@]}" "${HDRS[@]}" \
+  MAIL_ACCOUNT=$(nc_curl_retry "${AUTH[@]}" "${HDRS[@]}" \
     "$NEXTCLOUD_URL/index.php/apps/mail/api/accounts" \
     | FAMILY_GMAIL_ADDRESS="$FAMILY_EMAIL" python3 -c 'import sys,json,os
 d=json.load(sys.stdin)
@@ -37,7 +41,7 @@ MAILBOXES_FILE=$(mktemp)
 INBOX_PROBE=$(mktemp)
 trap 'rm -f "$MAILBOXES_FILE" "$INBOX_PROBE"' EXIT
 
-curl -sS "${AUTH[@]}" "${HDRS[@]}" \
+nc_curl_retry "${AUTH[@]}" "${HDRS[@]}" \
   "$NEXTCLOUD_URL/index.php/apps/mail/api/mailboxes?accountId=$MAIL_ACCOUNT" \
   > "$MAILBOXES_FILE"
 
@@ -57,7 +61,7 @@ PY
 
 NEED_SYNC=1
 if [[ -n "$INBOX_MB" ]]; then
-  curl -sS "${AUTH[@]}" "${HDRS[@]}" \
+  nc_curl_retry "${AUTH[@]}" "${HDRS[@]}" \
     "$NEXTCLOUD_URL/index.php/apps/mail/api/messages?mailboxId=$INBOX_MB&limit=5" \
     > "$INBOX_PROBE"
   if python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); m=d if isinstance(d,list) else d.get("messages") or d.get("data") or []; sys.exit(0 if m else 1)' "$INBOX_PROBE" 2>/dev/null; then
@@ -98,13 +102,28 @@ for t in cal_titles:
         if len(w) > 3:
             cal_words.add(w)
 
-def nc_get(path, timeout=30):
-    req = urllib.request.Request(
-        f"{nc}{path}",
-        headers={"Authorization": f"Basic {auth_hdr}", "Accept": "application/json", "OCS-APIREQUEST": "true"},
-    )
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.loads(r.read().decode())
+def nc_get(path, timeout=30, retries=12):
+    import urllib.error
+    delay = 1
+    last_err = None
+    for attempt in range(retries):
+        req = urllib.request.Request(
+            f"{nc}{path}",
+            headers={"Authorization": f"Basic {auth_hdr}", "Accept": "application/json", "OCS-APIREQUEST": "true"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return json.loads(r.read().decode())
+        except urllib.error.HTTPError as e:
+            last_err = e
+            if e.code in (503, 502, 409) and attempt + 1 < retries:
+                time.sleep(min(delay, 6))
+                delay += 1
+                continue
+            raise
+    if last_err:
+        raise last_err
+    raise RuntimeError("nc_get failed")
 
 def parse_messages(raw):
     if isinstance(raw, list):
