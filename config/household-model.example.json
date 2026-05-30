@@ -24,5 +24,9 @@
   },
   "email_keywords": [
     "lesson", "practice", "game", "tutor", "conference", "appointment"
-  ]
+  ],
+  "calendar_source_ids": {
+    "family-parent@example.com": "6000001",
+    "family-kid@example.com": "6000002"
+  }
 }

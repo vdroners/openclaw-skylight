@@ -1,0 +1,25 @@
+{
+  "accounts": [
+    {
+      "role": "family",
+      "email": "family-parent@example.com",
+      "secret_file": "family-gmail-mail.secret",
+      "account_name": "Family Gmail",
+      "smtp": false
+    },
+    {
+      "role": "ops",
+      "email": "ops@example.com",
+      "secret_file": "ops-gmail-mail.secret",
+      "account_name": "Ops Gmail",
+      "smtp": true
+    },
+    {
+      "role": "work",
+      "email": "work@example.com",
+      "secret_file": "work-gmail-mail.secret",
+      "account_name": "Work Gmail",
+      "smtp": true
+    }
+  ]
+}

@@ -14,25 +14,22 @@ AUTH=(-u "$NEXTCLOUD_USER:$NEXTCLOUD_PASS")
 HDRS=(-H "Accept: application/json" -H "OCS-APIREQUEST: true")
 
 FAMILY_EMAIL="${FAMILY_GMAIL_ADDRESS:-}"
-MAIL_ACCOUNT="${FAMILY_MAIL_ACCOUNT_ID:-${FAMILY_MAIL_ACCOUNT_ID:-}}"
+MAIL_ACCOUNT="${FAMILY_MAIL_ACCOUNT_ID:-}"
 
-if [[ -z "$MAIL_ACCOUNT" ]]; then
+if [[ -z "$MAIL_ACCOUNT" && -n "$FAMILY_EMAIL" ]]; then
   MAIL_ACCOUNT=$(curl -sS "${AUTH[@]}" "${HDRS[@]}" \
     "$NEXTCLOUD_URL/index.php/apps/mail/api/accounts" \
-    | python3 -c 'import sys,json,os
+    | FAMILY_GMAIL_ADDRESS="$FAMILY_EMAIL" python3 -c 'import sys,json,os
 d=json.load(sys.stdin)
 a=d if isinstance(d,list) else d.get("accounts",[]) or []
 needle=os.environ.get("FAMILY_GMAIL_ADDRESS","").lower()
 for x in a:
-    em=(x.get("emailAddress") or "").lower()
-    if needle and needle in em:
-        print(x["id"]); break
-    if not needle and "@" in em:
+    if needle in (x.get("emailAddress") or "").lower():
         print(x["id"]); break')
 fi
 
 if [[ -z "$MAIL_ACCOUNT" ]]; then
-  echo "Gate E2: FAIL — no family mail account (set FAMILY_MAIL_ACCOUNT_ID or run nc-mail-add-gmail.sh)" >&2
+  echo "Gate E2: FAIL — set FAMILY_MAIL_ACCOUNT_ID and FAMILY_GMAIL_ADDRESS for family enrich" >&2
   exit 1
 fi
 

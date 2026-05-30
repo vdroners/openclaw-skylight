@@ -27,6 +27,18 @@ HDRS=(-H "Accept: application/json" -H "OCS-APIREQUEST: true")
 NC="$NEXTCLOUD_URL"
 ```
 
+## Account role routing (3-account Alfred setup)
+
+| Role | Gmail (example) | Env ID | Env address | Use |
+|------|-----------------|--------|-------------|-----|
+| `family` | household parent | `FAMILY_MAIL_ACCOUNT_ID` | `FAMILY_GMAIL_ADDRESS` | Skylight calendar enrich (read-only); **not** in daily digest |
+| `ops` | personal ops inbox | `OPS_MAIL_ACCOUNT_ID` | `OPS_GMAIL_ADDRESS` | Daily digest + urgent scan (IMAP+SMTP) |
+| `work` | work inbox | `WORK_MAIL_ACCOUNT_ID` | `WORK_GMAIL_ADDRESS` | Daily digest + urgent scan (IMAP+SMTP) |
+
+Discovery order: prefer env `*_MAIL_ACCOUNT_ID`, else match `*_GMAIL_ADDRESS` against `/mail/api/accounts`. Run `bash scripts/nc-mail-sync-accounts.sh --check` to refresh `state/mail-account-ids.json`.
+
+Automations: `email-daily-digest-post.sh` and `email-urgent-scan.sh` default to **ops+work** only (`URGENT_SCAN_ACCOUNTS=ops,work`). Family mail stays on `skylight-email-enrich-scan.sh`.
+
 ## Discover account and INBOX (run first every turn)
 
 Optional: `FAMILY_MAIL_ACCOUNT_ID=8` pins daniel family Gmail for household enrichment.

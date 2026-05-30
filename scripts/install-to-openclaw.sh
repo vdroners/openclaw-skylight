@@ -46,3 +46,4 @@ fi
 export OPENCLAW_SKYLIGHT_ROOT="$ROOT"
 echo "Gate I1: install ok — OPENCLAW_SKYLIGHT_ROOT=$ROOT"
 echo "Re-run safe: symlinks updated idempotently (I2)"
+echo "Note: --force replaces local script copies with repo symlinks; keep operator wrappers (e.g. nc-mail-add-daniel-gmail.sh) outside scripts/ or restore after install."

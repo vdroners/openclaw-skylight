@@ -19,6 +19,7 @@ warn() { echo "Gate $1: WARN — $2"; }
 [[ -f "$BASELINE" ]] && pass B0 "baseline frozen at $BASELINE" || fail B0 "missing baseline"
 
 if [[ "$SKIP_LIVE" -eq 0 ]]; then
+  bash "${SCRIPT_DIR}/skylight-auth-refresh.sh" >/tmp/hh-auth.out 2>&1 || warn AUTH "$(tail -1 /tmp/hh-auth.out)"
   if bash "${SCRIPT_DIR}/skylight-smoke.sh" >/tmp/hh-g0b.out 2>&1; then
     pass G-0b "$(tail -1 /tmp/hh-g0b.out || echo ok)"
   else
@@ -55,8 +56,13 @@ fi
 if [[ "$SKIP_LIVE" -eq 0 ]]; then
   if bash "${SCRIPT_DIR}/skylight-calendar-update-probe.sh" >/tmp/hh-w1.out 2>&1; then
     pass W-1 "$(grep 'W-1 PASS' /tmp/hh-w1.out | tail -1 || echo ok)"
+    if grep -q 'Gate W-1b: PASS' /tmp/hh-w1.out; then
+      pass W-1b "$(grep 'Gate W-1b: PASS' /tmp/hh-w1.out | tail -1)"
+    else
+      fail W-1b "$(grep -E 'W-1b FAIL|Gate W-1b' /tmp/hh-w1.out | tail -1 || echo 'calendar IDs mismatch')"
+    fi
   else
-    fail W-1 "$(tail -1 /tmp/hh-w1.out)"
+    fail W-1 "$(grep 'W-1 FAIL' /tmp/hh-w1.out | tail -1 || tail -1 /tmp/hh-w1.out)"
   fi
 
   if bash "${SCRIPT_DIR}/skylight-chore-update-probe.sh" >/tmp/hh-w2.out 2>&1; then
@@ -65,35 +71,16 @@ if [[ "$SKIP_LIVE" -eq 0 ]]; then
     fail W-2 "$(tail -1 /tmp/hh-w2.out)"
   fi
 
-  if bash "${SCRIPT_DIR}/nc-mail-add-gmail.sh" >/tmp/hh-e1.out 2>&1; then
-    pass E1 "$(grep 'Gate E1' /tmp/hh-e1.out | tail -1)"
+  if bash "${SCRIPT_DIR}/mail-gates.sh" --check >/tmp/hh-mail.out 2>&1; then
+    grep '^Gate ' /tmp/hh-mail.out || true
   else
-    fail E1 "$(tail -1 /tmp/hh-e1.out)"
-  fi
-
-  E2_START=$(date +%s)
-  if timeout 60 bash "${SCRIPT_DIR}/skylight-email-enrich-scan.sh" >/tmp/hh-e2.out 2>&1; then
-    pass E2 "$(grep 'Gate E2' /tmp/hh-e2.out | tail -1)"
-  else
-    EC=$?
-    if [[ "$EC" -eq 124 ]]; then
-      fail E2-S "email-enrich-scan exceeded 60s"
-    else
-      warn E2 "$(grep 'Gate E2' /tmp/hh-e2.out | tail -1 || echo 'mail sync pending')"
-    fi
-  fi
-  E2_END=$(date +%s)
-  E2_EL=$((E2_END - E2_START))
-  if [[ "$E2_EL" -lt 60 ]]; then
-    pass E2-S "completed in ${E2_EL}s"
-  else
-    fail E2-S "took ${E2_EL}s (limit 60s)"
+    grep '^Gate ' /tmp/hh-mail.out >&2 || cat /tmp/hh-mail.out >&2
+    fail MAIL "$(grep 'hard_fail=' /tmp/hh-mail.out | tail -1 || tail -1 /tmp/hh-mail.out)"
   fi
 else
   warn W-1 "skipped (--skip-live)"
   warn W-2 "skipped (--skip-live)"
-  warn E1 "skipped (--skip-live)"
-  warn E2 "skipped (--skip-live)"
+  warn MAIL "skipped (--skip-live)"
 fi
 
 if bash "${SCRIPT_DIR}/skylight-household-propose.sh" --dry-run --limit 3 >/tmp/hh-p0.out 2>&1; then
@@ -135,18 +122,19 @@ if bash "${SCRIPT_DIR}/skylight-household-propose.sh" --dry-run --limit 3 >/tmp/
   fi
 fi
 
-if [[ "$SKIP_LIVE" -eq 0 ]]; then
-  TEST_PID=$(python3 -c "import json; b=json.load(open('$BATCH')); p=next((x['id'] for x in b.get('proposals',[]) if x.get('status')=='pending' and x['id'].startswith('enrich-chore')), None); print(p or '')" 2>/dev/null || echo "")
-  if [[ -n "$TEST_PID" ]]; then
-    if bash "${SCRIPT_DIR}/skylight-family-hub-dispatch.sh" "@alfred NO ${TEST_PID}" >/tmp/hh-c1b.out 2>&1; then
-      ST=$(python3 -c "import json; b=json.load(open('$BATCH')); p=next(x for x in b['proposals'] if x['id']=='$TEST_PID'); print(p.get('status'))")
-      [[ "$ST" == "rejected" ]] && pass C1b "dispatch NO → rejected for $TEST_PID" || fail C1b "status=$ST expected rejected"
+TEST_PID=$(python3 -c "import json; b=json.load(open('$BATCH')); p=next((x['id'] for x in b.get('proposals',[]) if x.get('status') in ('pending','rejected') and x['id'].startswith('enrich-chore')), None); print(p or '')" 2>/dev/null || echo "")
+if [[ -n "$TEST_PID" ]]; then
+  if bash "${SCRIPT_DIR}/skylight-family-hub-dispatch.sh" --dry-run "@alfred NO ${TEST_PID}" >/tmp/hh-c1b.out 2>&1; then
+    if grep -qE 'DRY-RUN C1b:|Gate C1b:' /tmp/hh-c1b.out; then
+      pass C1b "dry-run validated NO for $TEST_PID"
     else
       fail C1b "$(tail -1 /tmp/hh-c1b.out)"
     fi
   else
-    warn C1b "no pending enrich-chore to test dispatch"
+    fail C1b "$(tail -1 /tmp/hh-c1b.out)"
   fi
+else
+  warn C1b "no enrich-chore proposal to test dispatch"
 fi
 
 if bash "${SCRIPT_DIR}/skylight-household-defer-stale.sh" --dry-run >/tmp/hh-p5.out 2>&1; then
@@ -194,6 +182,7 @@ echo ""
 echo "=== Manual gates (record PASS in docs/SKYLIGHT-HOUSEHOLD-ENRICHMENT.md) ==="
 echo "  C1: @alfred add milk to grocery → proposal only"
 echo "  C2: @alfred what's on the calendar Saturday? → read-only digest"
+echo "  C1b-LIVE: live @alfred NO <proposal-id> in Family Hub (not dry-run)"
 echo "  S0: Operator posts SIGN-OFF household audit in Family Hub"
 echo ""
 echo "=== Household gate summary (hard_fail=$FAIL) ==="

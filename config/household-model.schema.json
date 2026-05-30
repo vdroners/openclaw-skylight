@@ -35,6 +35,11 @@
     "email_keywords": {
       "type": "array",
       "items": { "type": "string" }
+    },
+    "calendar_source_ids": {
+      "type": "object",
+      "description": "Optional map of calendar owner email to Skylight calendar source id (W-1b gate)",
+      "additionalProperties": { "type": "string" }
     }
   },
   "additionalProperties": true

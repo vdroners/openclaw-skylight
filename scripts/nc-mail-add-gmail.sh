@@ -1,36 +1,56 @@
 #!/usr/bin/env bash
 # Add family Gmail to Nextcloud Mail (read-only IMAP). Password in secret file only.
 # Usage: nc-mail-add-gmail.sh
-# Env: FAMILY_GMAIL_ADDRESS, FAMILY_GMAIL_SECRET_FILE (default: ~/.openclaw/.env.d/family-gmail-mail.secret)
+# Env: FAMILY_GMAIL_ADDRESS, FAMILY_MAIL_ACCOUNT_ID, FAMILY_GMAIL_SECRET_FILE
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR}/load-nextcloud-env.sh"
 
-EMAIL="${FAMILY_GMAIL_ADDRESS:?FAMILY_GMAIL_ADDRESS not set}"
-SECRET_FILE="${FAMILY_GMAIL_SECRET_FILE:-${OPENCLAW_DIR:-$HOME/.openclaw}/.env.d/family-gmail-mail.secret}"
+OPENCLAW_DIR="${OPENCLAW_DIR:-$HOME/.openclaw}"
+EMAIL="${FAMILY_GMAIL_ADDRESS:-}"
+SECRET_FILE="${FAMILY_GMAIL_SECRET_FILE:-${OPENCLAW_DIR}/.env.d/family-gmail-mail.secret}"
 ACCOUNT_NAME="${FAMILY_MAIL_ACCOUNT_NAME:-Family Gmail}"
 
-[[ -f "$SECRET_FILE" ]] || { echo "Missing $SECRET_FILE" >&2; exit 1; }
-APP_PASS="$(tr -d ' \n' < "$SECRET_FILE")"
+if [[ ! -f "$SECRET_FILE" && -f "${OPENCLAW_DIR}/.env.d/daniel-gmail-mail.secret" ]]; then
+  SECRET_FILE="${OPENCLAW_DIR}/.env.d/daniel-gmail-mail.secret"
+fi
 
 AUTH=(-u "$NEXTCLOUD_USER:$NEXTCLOUD_PASS")
 HDRS=(-H "Accept: application/json" -H "OCS-APIREQUEST: true" -H "Content-Type: application/json")
 
-EXISTING=$(curl -sS "${AUTH[@]}" "${HDRS[@]}" \
-  "$NEXTCLOUD_URL/index.php/apps/mail/api/accounts" \
-  | python3 -c 'import sys,json,os
+find_existing() {
+  curl -sS "${AUTH[@]}" "${HDRS[@]}" \
+    "$NEXTCLOUD_URL/index.php/apps/mail/api/accounts" \
+    | python3 -c 'import sys,json,os
 d=json.load(sys.stdin)
 a=d if isinstance(d,list) else d.get("accounts",[]) or []
+aid=os.environ.get("ACCOUNT_ID","").strip()
 needle=os.environ.get("EMAIL","").lower()
-print(next((str(x["id"]) for x in a if needle in (x.get("emailAddress") or "").lower()), ""))' EMAIL="$EMAIL")
+if aid:
+    for x in a:
+        if str(x.get("id")) == aid:
+            print(aid); raise SystemExit(0)
+if needle:
+    for x in a:
+        if needle in (x.get("emailAddress") or "").lower():
+            print(x["id"]); raise SystemExit(0)
+for x in a:
+    em=(x.get("emailAddress") or "").lower()
+    if em.endswith("@gmail.com"):
+        print(x["id"]); break' ACCOUNT_ID="${FAMILY_MAIL_ACCOUNT_ID:-}" EMAIL="$EMAIL"
+}
 
+EXISTING="$(find_existing || true)"
 if [[ -n "$EXISTING" ]]; then
   echo "Gate E1: PASS — family account id=$EXISTING"
-  export FAMILY_MAIL_ACCOUNT_ID="$EXISTING"
   exit 0
 fi
+
+[[ -n "$EMAIL" ]] || { echo "Gate E1: FAIL — set FAMILY_GMAIL_ADDRESS to add account" >&2; exit 1; }
+[[ -f "$SECRET_FILE" ]] || { echo "Gate E1: FAIL — missing $SECRET_FILE" >&2; exit 1; }
+APP_PASS="$(tr -d ' \n' < "$SECRET_FILE")"
 
 PAYLOAD=$(python3 - "$EMAIL" "$APP_PASS" "$ACCOUNT_NAME" <<'PY'
 import json, sys

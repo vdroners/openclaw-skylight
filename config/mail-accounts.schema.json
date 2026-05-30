@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MailAccounts",
+  "type": "object",
+  "required": ["accounts"],
+  "properties": {
+    "accounts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["role", "email", "secret_file", "account_name"],
+        "properties": {
+          "role": { "type": "string", "enum": ["family", "ops", "work"] },
+          "email": { "type": "string", "format": "email" },
+          "secret_file": { "type": "string" },
+          "account_name": { "type": "string" },
+          "smtp": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}
