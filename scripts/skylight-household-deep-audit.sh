@@ -18,7 +18,7 @@ OUT_MD="${LOG_DIR}/skylight-household-audit-${STAMP}.md"
 BASELINE="${LOG_DIR}/household-baseline-${STAMP}.json"
 
 python3 <<PY
-import json, os, subprocess, sys, urllib.request
+import json, os, re, subprocess, sys, urllib.request
 from collections import defaultdict
 from datetime import date, timedelta
 
@@ -128,7 +128,7 @@ for gid, items in groups.items():
     routine = a.get("routine")
     if not st:
         chores_missing_start += 1
-    if cat_id in KID_CATS and not routine:
+    if cat_id in KID_CATS and routine is None:
         chores_missing_routine += 1
     series_rows.append({
         "group_id": gid,
@@ -249,25 +249,62 @@ for e in events:
 
 enrich_chores = []
 for row in series_rows:
-    if row["start_time"]:
-        continue
     ns = norm_title(row["summary"])
+    needs_time = not row["start_time"]
+    needs_points = row["reward_points"] is None
+    needs_routine = row["category_id"] in KID_CATS and not row["routine"]
+    if not (needs_time or needs_points or (needs_routine and row["start_time"])):
+        continue
     defaults = CHORE_TIME_DEFAULTS.get(ns)
-    if not defaults:
+    if not defaults and needs_time:
         for k, v in CHORE_TIME_DEFAULTS.items():
             if k in ns:
                 defaults = v
                 break
-    if not defaults:
+    if not defaults and needs_time:
+        rrules = row.get("recurrence_set") or []
+        rrule = rrules[0] if rrules else ""
+        if "BYHOUR=6" in rrule or ("feed" in ns and "cat" in ns):
+            defaults = ("06:00", True)
+        elif "BYHOUR=20" in rrule:
+            defaults = ("20:00", True)
+        elif "FREQ=DAILY" in rrule:
+            m = re.search(r"INTERVAL=(\d+)", rrule)
+            interval = int(m.group(1)) if m else 1
+            if interval == 1 and any(k in ns for k in ("dishes", "clean room", "brush", "toys", "shoes", "kitchen", "counter")):
+                defaults = ("20:00", True)
+            elif interval == 3 and "trash" in ns:
+                defaults = ("07:00", False)
+            elif interval >= 4:
+                defaults = ("10:00", False)
+        elif "FREQ=WEEKLY" in rrule or "FREQ=MONTHLY" in rrule:
+            defaults = ("10:00", False)
+    fields = {}
+    if needs_time and defaults:
+        st, routine = defaults
+        fields["start_time"] = st
+        fields["routine"] = routine
+    elif needs_routine and defaults and defaults[1]:
+        fields["routine"] = True
+    if needs_points:
+        rrule = (row.get("recurrence_set") or [""])[0]
+        if "FREQ=MONTHLY" in rrule:
+            fields["reward_points"] = 2
+        elif any(k in ns for k in ("vacuum", "mop", "deep", "window", "mirror", "shelf", "piano", "organize")):
+            fields["reward_points"] = 2
+        else:
+            fields["reward_points"] = row["reward_points"] or 1
+    if not fields:
         continue
-    st, routine = defaults
+    if "reward_points" not in fields:
+        fields["reward_points"] = row["reward_points"] or 1
     enrich_chores.append({
         "id": next_id("enrich-chore"),
         "group_id": row["group_id"],
         "summary": row["summary"],
         "person": row["person"],
         "action": "updateChore",
-        "fields": {"start_time": st, "routine": routine, "reward_points": row["reward_points"] or 1},
+        "fields": fields,
         "confidence": 0.85,
         "source": "plan_defaults",
         "status": "pending",

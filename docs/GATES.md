@@ -27,6 +27,14 @@ Run `scripts/skylight-household-gates.sh` locally and `scripts/publish-gates.sh`
 | C2 | `@alfred what's on the calendar Saturday?` → read-only |
 | S0 | `SIGN-OFF household audit` in Family Hub |
 
+## Flight triage gates (Alfred + NC Ardupilot Triage)
+
+| Gate | Command |
+|------|---------|
+| G-ALF-01..04 | `bash scripts/alfred-flight-triage-gates.sh` |
+| G-AT-* | `docker exec -u www-data cloud_app php .../nc_ardupilot_triage/tools/triage-api-gates.php` |
+| G-WKR-* | `bash /media/4TB/nc-gcs/services/triage-worker/scripts/worker-gates.sh` |
+
 ## Publish gates
 
 | Gate | Check |
@@ -56,4 +64,36 @@ Run `scripts/skylight-household-gates.sh` locally and `scripts/publish-gates.sh`
 | MAIL-URGENT | `email-urgent-scan.sh` exit 0, JSON line |
 
 Household aggregator calls `mail-gates.sh --check` (no account apply during full household run).
+
+## Talk response gates (`talk-response-audit.sh --check`)
+
+| Gate | PASS criteria |
+|------|---------------|
+| G0 | Gateway + relay active; ports 8788/8789/18789; hooks token |
+| G1 | Ops room requireMention true; Family Hub false; rich mentionPatterns |
+| G2 | Relay deliver true; mention helper; Family Hub skips relay LLM |
+| G3 | dispatch + reply-handler executable; non-proposal exits 2 |
+| G4 | Bot in Family Hub + Ops rooms; relay reachable |
+
+Integrated in `alfred-ai-gates.sh` as **TR-ALL**.
+
+## Chore gates
+
+| Script | Purpose |
+|--------|---------|
+| `skylight-chores-fill-blanks.sh --dry-run` | No pending blank fields |
+| `skylight-chores-dedupe-mom.sh --dry-run` | Preview parent dedupe |
+| W-2 | `skylight-chore-update-probe.sh` |
+
+See [plans/skylight_chore_organization.md](plans/skylight_chore_organization.md).
+
+## Alfred AI gates (`alfred-ai-gates.sh --check`)
+
+| Gate | PASS criteria |
+|------|---------------|
+| AI-CRON-1..3 | Critical cron jobs status=ok within max age |
+| AI-CRON-4 | Shell-direct jobs disabled in OpenClaw cron |
+| DIS-1, DIS-3 | Family Hub dispatch dry-run + non-proposal exit 2 |
+| TR-ALL | `talk-response-audit.sh --phase all` |
+
 

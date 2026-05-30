@@ -4,11 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-05-30
+
+### Added
+
+- Talk response gates: `talk-response-audit.sh`, TR-ALL in `alfred-ai-gates.sh`
+- Chore organization: `skylight_chore_lib.py`, fill-blanks, dedupe-mom scripts
+- Recipe curation: `skylight_recipe_lib.py`, `skylight-curate-recipes.sh`
+- Alfred ops: `alfred-ai-gates.sh`, `alfred-catchup.sh`, `run-alfred-cron-shell.sh`
+- Flight triage bundle + skill + gates
+- Docs: `ALFRED-STACK.md`, `docs/plans/`, expanded `NEXTCLOUD-TALK.md`, `GATES.md`
+- `Makefile` targets: install, gates, smoke, talk-gates, chore dry-runs
+- Household model schema: `chore_reward_defaults`, `parent_categories`, canonical chore IDs
+
 ### Changed
 
-- Comprehensive README, SETUP, and CONTRIBUTING docs for OpenClaw operators
-- Remove hardcoded PII defaults from calendar probe and reply-handler
-- `scrub-for-publish.sh` falls back to grep when ripgrep is unavailable
+- `install-to-openclaw.sh` symlinks `.py` scripts and `flight-triage` skill
+- `skylight-household-deep-audit.sh` chore enrichment from model defaults + RRULE
+- Recipe import batch: skip existing titles, Sidekick boilerplate strip
+- `household-model.example.json` expanded chore defaults
 
 ## [0.1.2] - 2026-05-29
 

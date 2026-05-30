@@ -1,0 +1,58 @@
+# Shell-direct cron jobs (systemd timers, no agentTurn LLM wrapper).
+# Copy to ~/.openclaw/workspace/references/cron-shell-direct.yaml and edit paths.
+jobs:
+  - id: e1a2b3c4-email-daily-digest
+    name: email-daily-digest
+    script: ~/.openclaw/scripts/email-daily-digest-post.sh
+    success_grep: DIGEST_POSTED
+    schedule: "0 7 * * *"
+    tz: America/Los_Angeles
+
+  - id: b7c8d9e0-skylight-family-morning
+    name: skylight-family-morning
+    script: ~/.openclaw/scripts/skylight-family-morning-post.sh
+    success_grep: SKYLIGHT_FAMILY_BRIEF_POSTED
+    schedule: "30 7 * * *"
+    tz: America/Los_Angeles
+
+  - id: eeb9dfa1-a825-4e7f-ad3a-f94c8ab03889
+    name: email-urgent-flag
+    script: ~/.openclaw/scripts/email-urgent-alert.sh
+    success_grep: urgent-alert
+    schedule: "*/15 7-19 * * *"
+    tz: America/Los_Angeles
+
+  - id: 15faf3dc-295e-47ba-a717-98e4c49e06d8
+    name: tasks-morning-brief
+    script: ~/.openclaw/scripts/tasks-morning-brief-post.sh
+    success_grep: TASKS_BRIEF_POSTED
+    schedule: "30 6 * * *"
+    tz: America/Los_Angeles
+
+  - id: f2b3c4d5-calendar-morning-brief
+    name: calendar-morning-brief
+    script: ~/.openclaw/scripts/calendar-morning-brief-post.sh
+    success_grep: CALENDAR_BRIEF_POSTED
+    schedule: "0 6 * * *"
+    tz: America/Los_Angeles
+
+  - id: d30111b3-585c-424e-8988-eb901ce6380b
+    name: daily-health-report
+    script: ~/.openclaw/scripts/daily-health-report-post.sh
+    success_grep: HEALTH_REPORT_POSTED
+    schedule: "0 8 * * *"
+    tz: America/Los_Angeles
+
+  - id: c924d4ec-a108-475b-9a0e-bd6f8db87b23
+    name: alfred-self-watchdog
+    script: ~/.openclaw/scripts/alfred-self-watchdog-post.sh
+    success_grep: watchdog
+    schedule: "0 */4 * * *"
+    tz: America/Los_Angeles
+
+  - id: c4e5f6a7-skylight-audit-weekly
+    name: skylight-audit-weekly
+    script: ~/.openclaw/scripts/skylight-audit-weekly.sh
+    success_grep: SKYLIGHT_AUDIT_WEEKLY_POSTED
+    schedule: "0 8 * * 0"
+    tz: America/Los_Angeles

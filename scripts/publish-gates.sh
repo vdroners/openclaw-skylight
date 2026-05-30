@@ -35,7 +35,10 @@ fi
 for f in scripts/*.sh; do
   bash -n "$f" || fail S4 "$f syntax error"
 done
-pass S4 "all scripts pass bash -n"
+for f in scripts/*.py; do
+  python3 -m py_compile "$f" || fail S4 "$f python syntax error"
+done
+pass S4 "all scripts pass bash -n and python compile"
 
 # S5-S6 covered by scrub
 

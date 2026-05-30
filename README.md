@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.4+-green.svg)](https://github.com/openclaw/openclaw)
-[![Release](https://img.shields.io/badge/release-v0.1.2-orange.svg)](CHANGELOG.md)
+[![Release](https://img.shields.io/badge/release-v0.1.3-orange.svg)](CHANGELOG.md)
 
 **OpenClaw skills + shell automation for Skylight Calendar frames** — household audit, propose-first Family Hub approvals, morning digests, and optional Nextcloud Mail enrichment.
 
@@ -37,7 +37,7 @@
 
 | Bundle | Purpose |
 |--------|---------|
-| **Skills** | `skylight`, `email-intelligence` — agent instructions for Family Hub vs ops mail |
+| **Skills** | `skylight`, `email-intelligence`, `flight-triage` — agent instructions |
 | **Scripts** | Auth, audit, propose/apply, Talk posts, mail sync, gate aggregators |
 | **Config** | JSON Schema for `household-model.json`, mail account templates, cron job stubs |
 | **Docs** | Setup, API quirks, full pass/fail gate matrix |
@@ -259,10 +259,12 @@ Operator guide: [docs/HOUSEHOLD-ENRICHMENT.md](docs/HOUSEHOLD-ENRICHMENT.md).
 
 | Aggregator | Command | When |
 |------------|---------|------|
+| Talk | `bash scripts/talk-response-audit.sh --check --phase all` | After Talk policy changes |
 | Mail | `bash scripts/mail-gates.sh --check` | After mail sync |
 | Household | `bash scripts/skylight-household-gates.sh` | Before sign-off |
+| Alfred AI | `bash scripts/alfred-ai-gates.sh --check` | Cron + dispatch + TR-ALL |
 | Publish | `bash scripts/publish-gates.sh` | Before git push |
-| Capabilities | `bash ~/.openclaw/scripts/verify-openclaw-capabilities.sh` | Alfred stack check |
+| Makefile | `make gates` | All of the above (except capabilities) |
 
 **Success criteria:** `mail-gates` and `skylight-household-gates` both report **`hard_fail=0`**.
 
@@ -284,14 +286,16 @@ openclaw-skylight/
 │   └── cron/*.job.json.template
 ├── scripts/
 │   ├── load-skylight-env.sh, load-nextcloud-env.sh
-│   ├── skylight-*.sh                  # audit, propose, apply, probes
+│   ├── skylight-*.sh, skylight_*.py       # audit, propose, chores, recipes
+│   ├── talk-response-audit.sh, talk-post.sh
+│   ├── alfred-ai-gates.sh, alfred-catchup.sh
+│   ├── flight-triage-*.sh
 │   ├── nc-mail-sync-accounts.sh, mail-gates.sh
-│   ├── email-daily-digest-post.sh, email-urgent-scan.sh
-│   ├── install-to-openclaw.sh
+│   ├── install-to-openclaw.sh, Makefile
 │   ├── publish-gates.sh, scrub-for-publish.sh
 │   └── validate-*.sh
-├── skills/skylight/, skills/email-intelligence/
-└── docs/                              # SETUP, GATES, API-QUIRKS, etc.
+├── skills/skylight/, skills/email-intelligence/, skills/flight-triage/
+└── docs/                              # SETUP, GATES, ALFRED-STACK, plans/
 ```
 
 Install symlinks repo scripts → `~/.openclaw/scripts/` and skills → `~/.openclaw/workspace/skills/`.

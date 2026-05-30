@@ -118,16 +118,27 @@ def subject_matches(subj_l):
         return True
     return any(w in subj_l for w in cal_words)
 
+def strip_html(text):
+    text = re.sub(r"<(script|style)[^>]*>.*?</\\1>", " ", text, flags=re.I | re.S)
+    text = re.sub(r"<[^>]+>", " ", text)
+    return re.sub(r"\\s+", " ", text).strip()
+
 def extract_location(subj, body):
-    text = subj + " " + body
+    text = strip_html(subj + " " + body)
     for pat in [
-        r"(\d+[^,\n]{5,80}(?:Portland|OR|Oregon)[^,\n]{0,40})",
-        r"(Rose City Futsal[^<\n]{0,60})",
-        r"(2832 SW Sam Jackson Park Rd[^<\n]{0,40})",
+        r"(\\d+[^,\\n]{5,80}(?:Portland|OR|Oregon)[^,\\n]{0,40})",
+        r"(Rose City Futsal[^\\n]{0,60})",
+        r"(2832 SW Sam Jackson Park Rd[^\\n]{0,40})",
     ]:
         m2 = re.search(pat, text, re.I)
-        if m2:
-            return m2.group(1).strip()
+        if not m2:
+            continue
+        loc = m2.group(1).strip()
+        if any(x in loc for x in ("{", "}", "display:", "text-decoration", "@media")):
+            continue
+        if len(loc) > 120:
+            continue
+        return loc
     return None
 
 mb_ids = []

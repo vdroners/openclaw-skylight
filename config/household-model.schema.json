@@ -32,6 +32,26 @@
         "maxItems": 2
       }
     },
+    "chore_reward_defaults": {
+      "type": "object",
+      "properties": {
+        "default": { "type": "integer", "minimum": 0 },
+        "deep": { "type": "integer", "minimum": 0 },
+        "monthly": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "parent_categories": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "chore_schedule_notes": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "mom_chore_canonical": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
     "email_keywords": {
       "type": "array",
       "items": { "type": "string" }

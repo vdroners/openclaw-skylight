@@ -7,7 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR}/load-skylight-env.sh"
 
-CATEGORY="Snack"
+CATEGORY=""
 FILE=""
 
 while [[ $# -gt 0 ]]; do
@@ -23,39 +23,28 @@ done
 
 [[ -n "$FILE" && -f "$FILE" ]] || { echo "Missing recipe file" >&2; exit 1; }
 
-python3 <<PY
-import os, re, subprocess, sys
+export SCRIPT_DIR
+python3 - "$FILE" "$CATEGORY" "$SCRIPT_DIR" <<'PY'
+import json, os, subprocess, sys
 from pathlib import Path
 
-path = Path("$FILE")
-category_label = "$CATEGORY"
+sys.path.insert(0, sys.argv[3])
+from skylight_recipe_lib import (
+    category_for_bb_file,
+    extract_sidekick_from_markdown,
+    list_categories,
+    parse_title,
+)
+
+path = Path(sys.argv[1])
+category_label = sys.argv[2] if sys.argv[2] else category_for_bb_file(path)
 fid = os.environ["SKYLIGHT_FRAME_ID"]
 text = path.read_text(encoding="utf-8")
+summary = parse_title(text, path.stem.replace("-", " ").title())
+description = extract_sidekick_from_markdown(text, title=summary)
 
-# YAML frontmatter title
-m = re.search(r"^title:\s*[\"']?(.+?)[\"']?\s*$", text, re.M)
-summary = m.group(1).strip() if m else path.stem.replace("-", " ").title()
-
-# Prefer Sidekick import block if present
-block = re.search(r"## Sidekick import\s*\n(.*?)(?:\n## |\Z)", text, re.S)
-if block:
-    description = block.group(1).strip()
-else:
-    # Strip frontmatter
-    body = re.sub(r"^---\s*\n.*?\n---\s*\n", "", text, count=1, flags=re.S)
-    description = body.strip()[:8000]
-
-cats = subprocess.check_output(
-    ["skylight", "meals", "listCategories", "--frame-id", fid, "--json"],
-    text=True,
-)
-import json
-data = json.loads(cats)
-cat_id = None
-for c in data.get("data", []):
-    if c.get("attributes", {}).get("label") == category_label:
-        cat_id = c["id"]
-        break
+cats = list_categories(fid)
+cat_id = cats.get(category_label)
 if not cat_id:
     raise SystemExit(f"Unknown meal category: {category_label}")
 

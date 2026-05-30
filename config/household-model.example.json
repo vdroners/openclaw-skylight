@@ -14,13 +14,37 @@
     "2000001": "Alex",
     "2000002": "Jordan"
   },
+  "parent_categories": {
+    "2000003": "Parent"
+  },
   "family_talk_room": "",
   "ops_talk_room": "",
+  "chore_reward_defaults": {
+    "default": 1,
+    "deep": 2,
+    "monthly": 2
+  },
   "chore_time_defaults": {
     "dishes": ["20:00", true],
     "clean room": ["20:00", true],
+    "brush teeth": ["20:00", true],
+    "feed/water cats": ["06:00", true],
+    "kitchen counters": ["20:00", true],
     "take out trash": ["07:00", false],
+    "mop": ["10:00", false],
+    "toilet": ["10:00", false],
+    "vacuum": ["10:00", false],
+    "laundry": ["10:00", false],
     "run": ["10:00", false]
+  },
+  "chore_schedule_notes": {
+    "Alex": "Evening block 20:00 for daily routines; periodic chores at 10:00.",
+    "Parent": "Monthly deep chores at 10:00, 2 pts each."
+  },
+  "mom_chore_canonical": {
+    "clean_shelf": "GROUP_ID_1",
+    "clean_shelf_piano_top": "GROUP_ID_2",
+    "organize_knitting_sewing": "GROUP_ID_3"
   },
   "email_keywords": [
     "lesson", "practice", "game", "tutor", "conference", "appointment"

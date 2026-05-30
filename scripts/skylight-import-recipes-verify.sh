@@ -25,30 +25,28 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-python3 <<PY
-import json, os, re, subprocess, sys
+python3 - "$MODE" "$FILE" "$TITLE" "$SCRIPT_DIR" <<'PY'
+import json, os, subprocess, sys
 from pathlib import Path
+
+sys.path.insert(0, sys.argv[4])
+from skylight_recipe_lib import extract_sidekick_from_markdown, parse_title
 
 def parse_recipe(path: Path):
     text = path.read_text(encoding="utf-8")
-    m = re.search(r"^title:\s*[\"']?(.+?)[\"']?\s*$", text, re.M)
-    summary = m.group(1).strip() if m else path.stem.replace("-", " ").title()
-    block = re.search(r"## Sidekick import\s*\n(.*?)(?:\n## |\Z)", text, re.S)
+    summary = parse_title(text, path.stem.replace("-", " ").title())
+    block = "## Sidekick import" in text
+    description = extract_sidekick_from_markdown(text, title=summary)
     source = "sidekick_block" if block else "body_fallback"
-    if block:
-        description = block.group(1).strip()
-    else:
-        body = re.sub(r"^---\s*\n.*?\n---\s*\n", "", text, count=1, flags=re.S)
-        description = body.strip()[:8000]
     ingredient_lines = [
         ln.strip() for ln in description.splitlines()
-        if ln.strip().startswith("- ") or re.match(r"^\d+\.", ln.strip())
+        if ln.strip().startswith("- ") or __import__("re").match(r"^\d+\.", ln.strip())
     ]
     return summary, description, source, ingredient_lines
 
-mode = "$MODE"
+mode = sys.argv[1]
 if mode == "dry-run":
-    path = Path("$FILE")
+    path = Path(sys.argv[2])
     if not path.is_file():
         raise SystemExit(f"Missing file: {path}")
     summary, desc, source, ing = parse_recipe(path)
@@ -65,7 +63,7 @@ if mode == "dry-run":
     sys.exit(0 if ok else 1)
 
 if mode == "check":
-    title = "$TITLE"
+    title = sys.argv[3]
     fid = os.environ["SKYLIGHT_FRAME_ID"]
     out = subprocess.check_output(
         ["skylight", "meals", "listRecipes", "--frame-id", fid, "--json"],
@@ -86,6 +84,7 @@ if mode == "check":
     checks = {
         "has_ingredients": "Ingredients" in body or body.strip().startswith("- "),
         "has_course": "Course:" in body,
+        "no_boilerplate": "Copy everything below" not in body,
         "no_table_pipes": "|" not in body,
         "min_length": len(body) >= 200,
     }

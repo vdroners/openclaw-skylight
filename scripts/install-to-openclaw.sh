@@ -35,8 +35,17 @@ for f in "${ROOT}"/scripts/*.sh; do
   link_one "$f" "${OPENCLAW_DIR}/scripts/$base"
 done
 
+for f in "${ROOT}"/scripts/*.py; do
+  [[ -f "$f" ]] || continue
+  base=$(basename "$f")
+  link_one "$f" "${OPENCLAW_DIR}/scripts/$base"
+done
+
 link_one "${ROOT}/skills/skylight" "${OPENCLAW_DIR}/workspace/skills/skylight"
 link_one "${ROOT}/skills/email-intelligence" "${OPENCLAW_DIR}/workspace/skills/email-intelligence"
+if [[ -d "${ROOT}/skills/flight-triage" ]]; then
+  link_one "${ROOT}/skills/flight-triage" "${OPENCLAW_DIR}/workspace/skills/flight-triage"
+fi
 
 if [[ ! -f "${OPENCLAW_DIR}/config/household-model.json" ]]; then
   cp "${ROOT}/config/household-model.example.json" "${OPENCLAW_DIR}/config/household-model.json"
