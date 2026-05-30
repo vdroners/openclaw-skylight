@@ -4,6 +4,10 @@
 set -euo pipefail
 
 OPENCLAW="${OPENCLAW_DIR:-$HOME/.openclaw}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/load-skylight-env.sh" 2>/dev/null || true
+MENTION="${OPENCLAW_AGENT_MENTION:-@openclaw}"
 RUNS="${OPENCLAW}/cron/runs"
 MANIFEST="${OPENCLAW}/workspace/references/cron-shell-direct.yaml"
 JOBS_JSON="${OPENCLAW}/cron/jobs.json"
@@ -105,7 +109,7 @@ if [[ -f "$BATCH" ]]; then
   TEST_PID=$(python3 -c "import json; b=json.load(open('$BATCH')); p=next((x['id'] for x in b.get('proposals',[]) if x.get('status') in ('pending','rejected') and str(x.get('id','')).startswith('enrich-chore')), None); print(p or '')" 2>/dev/null || echo "")
 fi
 if [[ -n "$TEST_PID" ]]; then
-  if bash "${OPENCLAW}/scripts/skylight-family-hub-dispatch.sh" --dry-run "@openclaw NO ${TEST_PID}" >/tmp/ai-dis1.out 2>&1 \
+  if bash "${OPENCLAW}/scripts/skylight-family-hub-dispatch.sh" --dry-run "${MENTION} NO ${TEST_PID}" >/tmp/ai-dis1.out 2>&1 \
     && grep -qE 'DRY-RUN C1b:|Gate C1b:' /tmp/ai-dis1.out; then
     ok "DIS-1 dispatch dry-run NO ${TEST_PID}"
   else
@@ -116,11 +120,49 @@ else
 fi
 
 # DIS-3: non-match exits 2
-if bash "${OPENCLAW}/scripts/skylight-family-hub-dispatch.sh" "@openclaw what's for dinner?" >/dev/null 2>&1; then
+if bash "${OPENCLAW}/scripts/skylight-family-hub-dispatch.sh" "${MENTION} what's for dinner?" >/dev/null 2>&1; then
   bad "DIS-3 non-proposal should exit 2"
 else
   rc=$?
   [[ "$rc" -eq 2 ]] && ok "DIS-3 non-proposal exits 2" || bad "DIS-3 expected exit 2 got $rc"
+fi
+
+# CR-1: digest script direct
+if bash "${OPENCLAW}/scripts/email-daily-digest-post.sh" >/tmp/ai-cr1.out 2>&1 \
+  && grep -q 'DIGEST_POSTED' /tmp/ai-cr1.out; then
+  ok "CR-1 email-daily-digest-post.sh DIGEST_POSTED"
+else
+  bad "CR-1 email-daily-digest-post.sh failed: $(tail -1 /tmp/ai-cr1.out 2>/dev/null)"
+fi
+
+# MDL-* model routing
+if [[ -x "${SCRIPT_DIR}/validate-model-routing.sh" ]]; then
+  if bash "${SCRIPT_DIR}/validate-model-routing.sh" --check >/tmp/ai-mdl.out 2>&1; then
+    ok "MDL-ALL validate-model-routing.sh"
+  else
+    grep -E '^(PASS|FAIL|WARN) ' /tmp/ai-mdl.out | while read -r line; do
+      case "$line" in
+        PASS*) ok "${line#PASS }" ;;
+        FAIL*) bad "${line#FAIL }" ;;
+        WARN*) warn "${line#WARN }" ;;
+      esac
+    done
+  fi
+elif [[ -x "${OPENCLAW}/scripts/validate-model-routing.sh" ]]; then
+  bash "${OPENCLAW}/scripts/validate-model-routing.sh" --check >/tmp/ai-mdl.out 2>&1 \
+    && ok "MDL-ALL validate-model-routing.sh" \
+    || bad "MDL validate-model-routing failed (see /tmp/ai-mdl.out)"
+else
+  warn "MDL skipped — validate-model-routing.sh missing"
+fi
+
+# CR-AUDIT critical shell-direct cron errors
+if [[ -x "${OPENCLAW}/scripts/cron-audit.sh" ]]; then
+  if bash "${OPENCLAW}/scripts/cron-audit.sh" --check >/tmp/ai-cron-audit.out 2>&1; then
+    ok "CR-AUDIT cron-audit.sh --check"
+  else
+    bad "CR-AUDIT cron-audit failed: $(grep CR-AUDIT /tmp/ai-cron-audit.out | tail -1 || tail -1 /tmp/ai-cron-audit.out)"
+  fi
 fi
 
 # TR-* Talk response gates

@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.4+-green.svg)](https://github.com/openclaw/openclaw)
-[![Release](https://img.shields.io/badge/release-v0.2.0-orange.svg)](CHANGELOG.md)
+[![Release](https://img.shields.io/badge/release-v0.2.1-orange.svg)](CHANGELOG.md)
 
 **OpenClaw skills + shell automation for Skylight Calendar frames** — household audit, propose-first Family Hub approvals, morning digests, and optional Nextcloud Mail enrichment.
 

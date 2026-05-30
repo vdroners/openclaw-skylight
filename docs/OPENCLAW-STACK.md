@@ -14,6 +14,8 @@ This repo is the **canonical source** for Skylight household scripts, mail gates
 | Gates | household-gates, openclaw-ai-gates, mail-gates |
 | Skills | skylight, email-intelligence, flight-triage |
 
+**Skills install:** OpenClaw 2026.4.24 rejects skill symlinks outside the workspace root. `install-to-openclaw.sh` **copies** (`rsync`) skills into `~/.openclaw/workspace/skills/`. Re-run `bash scripts/install-to-openclaw.sh --force` after every skill update. Gate **I3** verifies paths stay under workspace.
+
 ## Operator-local (`~/.openclaw` only)
 
 | Asset | Why local |

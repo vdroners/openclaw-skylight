@@ -5,9 +5,9 @@ set -euo pipefail
 export OPENCLAW_AGENT_MENTION="${OPENCLAW_AGENT_MENTION:-@openclaw}"
 export OPENCLAW_AGENT_NAME="${OPENCLAW_AGENT_NAME:-${OPENCLAW_AGENT_MENTION#@}}"
 
-MODEL="${HOUSEHOLD_MODEL_JSON:-}"
-if [[ -n "$MODEL" && -f "$MODEL" ]]; then
-  eval "$(python3 - "$MODEL" <<'PY'
+AGENT_HOUSEHOLD_MODEL="${HOUSEHOLD_MODEL_JSON:-}"
+if [[ -n "$AGENT_HOUSEHOLD_MODEL" && -f "$AGENT_HOUSEHOLD_MODEL" ]]; then
+  eval "$(python3 - "$AGENT_HOUSEHOLD_MODEL" <<'PY'
 import json, shlex, sys
 from pathlib import Path
 p = Path(sys.argv[1])

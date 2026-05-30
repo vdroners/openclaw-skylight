@@ -4,7 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.2.0] - 2026-05-30
+## [0.2.1] - 2026-05-30
+
+### Fixed
+
+- **Skills install:** `install-to-openclaw.sh` copies skills into workspace (`sync_skill`) — OpenClaw 2026.4.24 rejects symlink-escape outside workspace root
+- **`load-agent-env.sh`:** no longer clobbers caller `MODEL` variable (`AGENT_HOUSEHOLD_MODEL`)
+- **`talk-response-audit.sh`:** exports `HOUSEHOLD_MODEL_JSON` before agent env load; G2 synthetics use `OPENCLAW_AGENT_MENTION`
+
+### Added
+
+- Gate **I3:** post-install check that workspace skills are real directories under `~/.openclaw/workspace/skills/`
+- `scripts/validate-model-routing.sh` — MDL gates for main/family agents and shell-direct cron
+- `openclaw-ai-gates.sh`: CR-1 digest direct check; MDL block; mention-aware DIS-1/DIS-3
+- `docs/plans/alfred_home_ai_fixes.md` — home AI hardening plan
+- `docs/templates/nc-webhook-relay-mention-snippet.md` — operator relay `@alfred` pattern
+
+### Changed
+
+- **`skylight-household-gates.sh`:** C1b dry-run uses `OPENCLAW_AGENT_MENTION` (homelab `@alfred`)
+- **`validate-model-routing.sh`:** MDL-2 checks relay hooks routing (room `agentId` invalid in OpenClaw 2026.4.24)
+
 
 ### Changed (public release prep)
 

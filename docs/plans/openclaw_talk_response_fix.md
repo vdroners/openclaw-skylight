@@ -36,11 +36,11 @@ bash ~/.openclaw/scripts/openclaw-ai-gates.sh --check
 |------|------|----------|--------|------|
 | T1 | Ops | No reply without @ | Partial (G2-5 relay 204) | 2026-05-30 |
 | T2 | Ops | Reply to `@openclaw` | Partial (G2-3 relay 200) | 2026-05-30 |
-| T3 | Ops | UI @-chip reply | Pending (manual UI) | |
-| T4 | Family Hub | Reply to plain question | Pending (manual UI) | |
+| T3 | Ops | UI @-chip reply | Pending (operator UI) | |
+| T4 | Family Hub | Reply to plain question | Pending (operator UI) | |
 | T5 | Family Hub | YES/NO fast-path | Partial (G2-7 relay 200) | 2026-05-30 |
-| T6 | OpenClaw DM | Reply to hello | Pending (manual UI) | |
-| T7 | Ops | Cron post, no agent follow-up | Pending (manual UI) | |
+| T6 | OpenClaw DM | Reply to hello | Pending (operator UI) | |
+| T7 | Ops | Cron post, no agent follow-up | Pending (operator UI) | |
 | T8 | Family Hub | Single reply (no double) | Partial (G2-4 skip) | 2026-05-30 |
 | T9 | Ops | Two `@openclaw` msgs 5s apart | Partial (G2-8 relay) | 2026-05-30 |
 

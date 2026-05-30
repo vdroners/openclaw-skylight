@@ -42,7 +42,7 @@ Run `scripts/skylight-household-gates.sh` locally and `scripts/publish-gates.sh`
 | S1 | scrub-for-publish.sh |
 | S2–S8 | size, .env.example, bash -n, PII, community files, cron |
 | X1 | validate-household-model.sh |
-| I1–I3 | install + homelab regression |
+| I1–I3 | install + homelab regression; **I3** = workspace skills are copied dirs (not symlink-escape) |
 | F1–F4 | fresh clone smoke + tag |
 | GH-1 | GitHub scrub workflow |
 

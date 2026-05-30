@@ -3,6 +3,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/load-skylight-env.sh"
 LOG_DIR="${OPENCLAW_DIR:-$HOME/.openclaw}/logs"
 STATE_DIR="${OPENCLAW_DIR:-$HOME/.openclaw}/state/household-proposals"
 BASELINE="${LOG_DIR}/household-baseline-2026-05-29.json"
@@ -109,7 +111,7 @@ if [[ -f "$BATCH" ]]; then
   REJ=$(python3 -c "import json; b=json.load(open('$BATCH')); print(sum(1 for p in b.get('proposals',[]) if p.get('status')=='rejected'))")
   [[ "$REJ" -ge 1 ]] && pass P4 "$REJ rejected without apply" || warn P4 "no rejected proposals yet"
   APPL=$(python3 -c "import json; b=json.load(open('$BATCH')); print(sum(1 for p in b.get('proposals',[]) if p.get('status')=='applied'))")
-  [[ "$APPL" -ge 1 ]] && pass P2 "$APPL applied proposals in batch" || warn P2 "no applied proposals yet (run @openclaw YES)"
+  [[ "$APPL" -ge 1 ]] && pass P2 "$APPL applied proposals in batch" || warn P2 "no applied proposals yet (run ${OPENCLAW_AGENT_MENTION:-@openclaw} YES)"
 else
   fail P1 "no batch-latest.json"
 fi
@@ -134,7 +136,8 @@ fi
 
 TEST_PID=$(python3 -c "import json; b=json.load(open('$BATCH')); p=next((x['id'] for x in b.get('proposals',[]) if x.get('status') in ('pending','rejected') and x['id'].startswith('enrich-chore')), None); print(p or '')" 2>/dev/null || echo "")
 if [[ -n "$TEST_PID" ]]; then
-  if bash "${SCRIPT_DIR}/skylight-family-hub-dispatch.sh" --dry-run "@openclaw NO ${TEST_PID}" >/tmp/hh-c1b.out 2>&1; then
+  MENTION="${OPENCLAW_AGENT_MENTION:-@openclaw}"
+  if bash "${SCRIPT_DIR}/skylight-family-hub-dispatch.sh" --dry-run "${MENTION} NO ${TEST_PID}" >/tmp/hh-c1b.out 2>&1; then
     if grep -qE 'DRY-RUN C1b:|Gate C1b:' /tmp/hh-c1b.out; then
       pass C1b "dry-run validated NO for $TEST_PID"
     else
@@ -190,9 +193,9 @@ fi
 
 echo ""
 echo "=== Manual gates (record PASS in docs/SKYLIGHT-HOUSEHOLD-ENRICHMENT.md) ==="
-echo "  C1: @openclaw add milk to grocery → proposal only"
-echo "  C2: @openclaw what's on the calendar Saturday? → read-only digest"
-echo "  C1b-LIVE: live @openclaw NO <proposal-id> in Family Hub (not dry-run)"
+echo "  C1: ${OPENCLAW_AGENT_MENTION:-@openclaw} add milk to grocery → proposal only"
+echo "  C2: ${OPENCLAW_AGENT_MENTION:-@openclaw} what's on the calendar Saturday? → read-only digest"
+echo "  C1b-LIVE: live ${OPENCLAW_AGENT_MENTION:-@openclaw} NO <proposal-id> in Family Hub (not dry-run)"
 echo "  S0: Operator posts SIGN-OFF household audit in Family Hub"
 echo ""
 echo "=== Household gate summary (hard_fail=$FAIL) ==="

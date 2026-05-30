@@ -10,6 +10,7 @@ RELAY="${OPENCLAW}/nc-webhook-relay.py"
 DISPATCH="${OPENCLAW}/scripts/skylight-family-hub-dispatch.sh"
 LOG_DIR="${OPENCLAW}/logs"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export HOUSEHOLD_MODEL_JSON="$MODEL"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR}/load-agent-env.sh" 2>/dev/null || true
 export OPENCLAW_AGENT_NAME="${OPENCLAW_AGENT_NAME:-openclaw}"
@@ -159,7 +160,7 @@ gate_relay() {
   grep -q '"deliver": True' "$RELAY" || grep -q '"deliver": true' "$RELAY" \
     && ok "G2-6 deliver true in relay" || bad "G2-6 deliver still false"
 
-  grep -qE '_message_mentions_(openclaw|agent)' "$RELAY" \
+  grep -qE '_message_mentions_(openclaw|agent|alfred)' "$RELAY" \
     && ok "G2-6b rich mention helper present" || bad "G2-6b rich mention helper missing"
 
   grep -q 'OPEN_ROOMS_NO_RELAY_LLM' "$RELAY" \
@@ -170,7 +171,8 @@ gate_relay() {
   python3 - "$OPS_ROOM" "$FAMILY_ROOM" <<'PY' | while read -r line; do
 import json, sys, time, urllib.error, urllib.request, os
 ops, fam = sys.argv[1], sys.argv[2]
-agent = os.environ.get("OPENCLAW_AGENT_NAME", "openclaw")
+mention = os.environ.get("OPENCLAW_AGENT_MENTION", "@openclaw").lstrip("@")
+agent = os.environ.get("OPENCLAW_AGENT_NAME", mention)
 uniq = str(int(time.time()))
 
 def post(body):
