@@ -43,7 +43,7 @@
 | **Config** | JSON Schema for `household-model.json`, mail account templates, cron job stubs, **cron-shell-direct.yaml** |
 | **Docs** | Setup, API quirks, full pass/fail gate matrix, **week-2 capacity guide** |
 
-It does **not** include NC-GCS fleet ops, HPB patches, or private operator runbooks. Those live in separate repos or local `~/.openclaw/`.
+It does **not** include NC-GCS fleet ops, HPB patches, MySubaru vehicle automation, or private operator runbooks. Vehicle integration lives in **openclaw-subaru**; fleet ops in separate repos or local `~/.openclaw/`.
 
 ---
 
@@ -392,6 +392,7 @@ More: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md), [docs/API-QUIRKS.md](d
 ## Related projects
 
 - **[NC-GCS](https://github.com/vdroners/NC-GCS)** — fleet ground control (separate repo; not bundled here)
+- **openclaw-subaru** — private sibling repo for MySubaru / vehicle automation (install alongside this project into `~/.openclaw`)
 - **email-to-event** — shell scan wrapper shipped; auto-create gated by `EMAIL_TO_EVENT_AUTO`
 
 ---

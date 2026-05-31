@@ -12,6 +12,10 @@ Use `.env.example` as a template. Run `scripts/scrub-for-publish.sh` before ever
 
 If you find a security issue in this integration (not the Skylight service itself), open a private GitHub security advisory or email the repository owner.
 
-## Unofficial API
+## Unofficial APIs
 
-This project uses an **unofficial** Skylight API. It may change without notice. The propose-first workflow is intentional — no silent writes to family calendars from chat.
+This project uses **unofficial** integrations that may change without notice:
+
+- **Skylight** — propose-first workflow prevents silent calendar writes from chat.
+
+MySubaru vehicle actuation is documented in the private **openclaw-subaru** repo.

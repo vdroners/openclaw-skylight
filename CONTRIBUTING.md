@@ -22,7 +22,7 @@ Both must report **`hard_fail=0`** before a release tag.
 
 **In scope:** Skylight frame automation, household audit/propose/apply, Nextcloud Talk + Mail helpers, OpenClaw skills.
 
-**Out of scope:** NC-GCS fleet ops, HPB patches, fleet QA skills, operator-private runbooks.
+**Out of scope:** NC-GCS fleet ops, HPB patches, fleet QA skills, MySubaru vehicle automation (openclaw-subaru), operator-private runbooks.
 
 ## Pull requests
 

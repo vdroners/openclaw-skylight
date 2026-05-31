@@ -124,4 +124,7 @@ Journal PERF metrics use `~/.openclaw/state/test-week-profile-applied.txt` as ba
 
 Full operator guide: [WEEK2-CAPACITY.md](WEEK2-CAPACITY.md). Manual UI gates: [OPERATOR-MANUAL-GATES.md](OPERATOR-MANUAL-GATES.md).
 
+## Related vehicle integration
+
+MySubaru / Subaru Connected Services automation lives in the private **openclaw-subaru** repo (sibling to this project). See that repo's `docs/GATES.md` and `docs/SUBARU-VEHICLE.md`.
 

@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **MySubaru / vehicle integration** moved to sibling repo **openclaw-subaru** (private). Install both into `~/.openclaw` if you use Skylight + Subaru.
+
 ## [0.2.2] - 2026-05-31
 
 ### Added
