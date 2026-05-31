@@ -160,7 +160,7 @@ gate_relay() {
   grep -q '"deliver": True' "$RELAY" || grep -q '"deliver": true' "$RELAY" \
     && ok "G2-6 deliver true in relay" || bad "G2-6 deliver still false"
 
-  grep -qE '_message_mentions_(openclaw|agent|alfred)' "$RELAY" \
+  grep -q '_message_mentions_' "$RELAY" \
     && ok "G2-6b rich mention helper present" || bad "G2-6b rich mention helper missing"
 
   grep -q 'OPEN_ROOMS_NO_RELAY_LLM' "$RELAY" \

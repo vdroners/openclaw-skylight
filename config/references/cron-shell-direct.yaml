@@ -1,0 +1,52 @@
+# Shell-direct cron jobs (systemd user timers, no agentTurn LLM wrapper).
+# Installed by: python3 scripts/install-openclaw-shell-cron.sh
+# Paths use ${OPENCLAW_DIR} — expanded at install time.
+jobs:
+  - id: e1a2b3c4-email-daily-digest
+    name: email-daily-digest
+    script: ${OPENCLAW_DIR}/scripts/email-daily-digest-post.sh
+    success_grep: DIGEST_POSTED
+    schedule: "0 7 * * *"
+    tz: America/Los_Angeles
+
+  - id: b7c8d9e0-skylight-family-morning
+    name: skylight-family-morning
+    script: ${OPENCLAW_DIR}/scripts/skylight-family-morning-post.sh
+    success_grep: SKYLIGHT_FAMILY_BRIEF_POSTED
+    schedule: "30 7 * * *"
+    tz: America/Los_Angeles
+
+  - id: eeb9dfa1-a825-4e7f-ad3a-f94c8ab03889
+    name: email-urgent-flag
+    script: ${OPENCLAW_DIR}/scripts/email-urgent-scan.sh
+    success_grep: urgent-alert
+    schedule: "*/15 7-19 * * *"
+    tz: America/Los_Angeles
+
+  - id: c4e5f6a7-skylight-audit-weekly
+    name: skylight-audit-weekly
+    script: ${OPENCLAW_DIR}/scripts/skylight-audit-weekly.sh
+    success_grep: SKYLIGHT_AUDIT_WEEKLY_POSTED
+    schedule: "0 8 * * 0"
+    tz: America/Los_Angeles
+
+  - id: 246c9c50-8db6-48e9-a166-c713045d3069
+    name: flight-event-monitor
+    script: ${OPENCLAW_DIR}/scripts/flight-event-monitor.sh
+    success_grep: FLIGHT_MONITOR
+    schedule: "*/10 6-20 * * *"
+    tz: America/Los_Angeles
+
+  - id: 8048cae1-8a7a-45a7-8fda-cf839b97dfda
+    name: email-to-event
+    script: ${OPENCLAW_DIR}/scripts/email-to-event-shell.sh
+    success_grep: "email-to-event:"
+    schedule: "*/20 7-20 * * *"
+    tz: America/Los_Angeles
+
+  - id: 8145b68e-7559-4b82-a81e-034b364b9afd
+    name: backup-verification
+    script: ${OPENCLAW_DIR}/scripts/backup-verify-shell.sh
+    success_grep: BACKUP_OK
+    schedule: "0 4 * * *"
+    tz: America/Los_Angeles

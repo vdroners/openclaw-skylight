@@ -1,6 +1,6 @@
-# Alfred Home AI — implementation plan (v0.2.1+)
+# OpenClaw Home AI — implementation plan (v0.2.1+)
 
-Checked-in summary of the homelab hardening plan. Full gate matrix lives in operator `openclaw-ai-gates.sh` + `validate-model-routing.sh`.
+Checked-in summary of homelab hardening. Full gate matrix: `openclaw-ai-gates.sh` + `validate-model-routing.sh`.
 
 ## Goals
 
@@ -26,13 +26,13 @@ Checked-in summary of the homelab hardening plan. Full gate matrix lives in oper
 | Tier | Workload | Model |
 |------|----------|-------|
 | 0 | YES/NO/EDIT, shell cron | None |
-| 1 | Ops `@alfred` | qwen3:8b-32k (main) |
+| 1 | Ops `@openclaw` | qwen3:8b-32k (main) |
 | 2 | Family Hub chat | qwen3:14b (family agent) |
 | 3–7 | Cron profiles | per `cron-model-map.yaml` |
 
 ## Key gates
 
-- **G-*** baseline: verify-alfred-stack, verify-openclaw-capabilities, mail-gates, household-gates, openclaw-ai-gates, talk-response-audit
+- **G-*** baseline: verify-openclaw-capabilities, mail-gates, household-gates, openclaw-ai-gates, talk-response-audit
 - **I3**: skills copied under workspace (not symlink-escape)
 - **MDL-1..11**: validate-model-routing.sh
 - **C1, C2, C1b-LIVE, DIS-5, S0**: manual Family Hub (enrichment doc sign-off)
@@ -40,7 +40,7 @@ Checked-in summary of the homelab hardening plan. Full gate matrix lives in oper
 ## Operator commands
 
 ```bash
-bash /media/4TB/openclaw-skylight/scripts/install-to-openclaw.sh --force
+bash scripts/install-to-openclaw.sh --force
 bash ~/.openclaw/scripts/openclaw-catchup.sh --household
 bash ~/.openclaw/scripts/openclaw-ai-gates.sh --check
 bash ~/.openclaw/scripts/validate-model-routing.sh --check

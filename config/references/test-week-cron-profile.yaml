@@ -1,0 +1,40 @@
+# Test-week cron profile — disable noisy agentTurn jobs to free Ops/Family Talk lanes.
+# Apply: bash scripts/apply-test-week-cron-profile.sh
+# Restore: bash scripts/restore-cron-profile.sh
+
+version: 1
+updated: 2026-05-31
+description: Week-2 capacity relief — reversible disable list
+
+disable:
+  - nightly-code-review
+  - weekly-deep-analysis
+  - monthly-system-report
+  - deck-weekly-summary
+  - security-weekly-report
+  - compliance-weekly-sweep
+  - battery-health-digest
+  - activity-digest
+  - nc-gcs-ui-test
+  - nc-gcs-integration
+  - nc-gcs-fleet-crud
+  - nc-gcs-resilience
+  - nc-gcs-stress-test
+  - openclaw-weekly-perf-digest
+  - tables-fleet-analytics
+  - nextcloud-weekly-report
+  - pre-deploy-check
+  - notes-end-of-day
+  - flight-event-monitor
+  - email-to-event
+  - backup-verification
+
+keep_enabled:
+  - nc-gcs-api-sweep
+  - nc-gcs-flight-test
+  - nc-gcs-full-qa
+  - daily-flight-briefing
+  - gh-issues-weekly-triage
+  - monthly-ops-review
+  - infra-health-check
+  - nc-app-update-check

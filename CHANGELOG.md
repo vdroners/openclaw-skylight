@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-05-31
+
+### Added
+
+- **Week-2 capacity bundle:** shell-direct cron, test-week profile, G-DAY gates — [docs/WEEK2-CAPACITY.md](docs/WEEK2-CAPACITY.md)
+- `scripts/openclaw-day-review.sh` — PERF/CAP/SESS/NC/E2E-AUTO daily review + JSON log
+- `scripts/flight-event-monitor.sh` — NC-GCS fleet monitor without LLM
+- `scripts/email-to-event-shell.sh`, `backup-verify-shell.sh`, `household-proposal-nudge.sh`
+- `scripts/cron-audit.sh` — CR-AUDIT gate (backup-verification deferred as CAP-F3)
+- `scripts/apply-test-week-cron-profile.sh`, `restore-cron-profile.sh`
+- `scripts/install-openclaw-shell-cron.sh` — systemd timers from `config/references/cron-shell-direct.yaml`
+- `config/references/cron-shell-direct.yaml`, `test-week-cron-profile.yaml`
+- `docs/OPERATOR-MANUAL-GATES.md`, `docs/plans/openclaw_week2_capacity.md`
+- Makefile targets: `day-review`, `shell-cron`
+- `.env.example`: `EMAIL_TO_EVENT_AUTO`, gateway health URLs, backup dir, cron unit prefix
+
+### Fixed
+
+- `run-openclaw-cron-shell.sh` — summary grep no longer fails under `pipefail` (blocked run log append)
+- `talk-post.sh` — `--dry-run`, `--test-retry`; requires `SKYLIGHT_OPS_TALK_ROOM` (no hardcoded room token)
+- `flight-event-monitor.sh` — accepts OpenClaw `"status":"live"`; mavlink alerts only with fleet activity
+- `openclaw-day-review.sh` — empty WORST_MS journal pipeline under `pipefail`
+
+### Changed
+
+- `openclaw-ai-gates.sh` — G-DAY integrates `openclaw-day-review.sh`; CR-AUDIT via `cron-audit.sh`
+- `install-to-openclaw.sh` — syncs `workspace/references/*.yaml` from repo
+
 ## [0.2.1] - 2026-05-30
 
 ### Fixed
@@ -17,7 +45,7 @@ All notable changes to this project will be documented in this file.
 - Gate **I3:** post-install check that workspace skills are real directories under `~/.openclaw/workspace/skills/`
 - `scripts/validate-model-routing.sh` — MDL gates for main/family agents and shell-direct cron
 - `openclaw-ai-gates.sh`: CR-1 digest direct check; MDL block; mention-aware DIS-1/DIS-3
-- `docs/plans/alfred_home_ai_fixes.md` — home AI hardening plan
+- `docs/plans/openclaw_home_ai_fixes.md` — home AI hardening plan
 - `docs/templates/nc-webhook-relay-mention-snippet.md` — operator relay `@alfred` pattern
 
 ### Changed

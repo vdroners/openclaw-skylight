@@ -176,5 +176,26 @@ else
   bad "TR-ALL talk-response-audit.sh missing"
 fi
 
+# G-DAY week-2 perf / cap / sess gates
+if [[ -x "${OPENCLAW}/scripts/openclaw-day-review.sh" ]]; then
+  set +e
+  bash "${OPENCLAW}/scripts/openclaw-day-review.sh" --check >/tmp/ai-day-review.out 2>&1
+  day_rc=$?
+  set -e
+  if [[ "$day_rc" -eq 0 ]]; then
+    ok "G-DAY openclaw-day-review.sh --check"
+  else
+    grep -E '^(PASS|FAIL|WARN) ' /tmp/ai-day-review.out | while read -r line; do
+      case "$line" in
+        PASS*) ok "${line#PASS }" ;;
+        FAIL*) bad "${line#FAIL }" ;;
+        WARN*) warn "${line#WARN }" ;;
+      esac
+    done
+  fi
+else
+  warn "G-DAY openclaw-day-review.sh missing"
+fi
+
 echo "hard_fail=${HARD_FAIL} soft_fail=${SOFT_FAIL}"
 exit "$HARD_FAIL"

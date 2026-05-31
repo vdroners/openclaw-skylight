@@ -39,7 +39,7 @@ else
   ERR="${OUT:0:500}"
 fi
 
-SUMMARY="$(grep -E 'POSTED|watchdog|urgent-alert|AUDIT' <<<"$OUT" | tail -1 | tr -d '\n' | cut -c1-240)"
+SUMMARY="$(grep -E 'POSTED|watchdog|urgent-alert|AUDIT|MONITOR_OK|BACKUP_OK' <<<"$OUT" | tail -1 | tr -d '\n' | cut -c1-240 || true)"
 [[ -n "$SUMMARY" ]] || SUMMARY="$(head -1 <<<"$OUT" | tr -d '\n' | cut -c1-240)"
 
 python3 - "$LOG" "$JOB_ID" "$JOB_NAME" "$START_MS" "$END_MS" "$DUR" "$STATUS" "$SUMMARY" "$ERR" <<'PY'

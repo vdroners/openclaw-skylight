@@ -88,3 +88,23 @@ bash ~/.openclaw/scripts/skylight-family-hub-dispatch.sh "<message>"
 ```
 
 When the message matches `@openclaw YES|NO|EDIT (enrich-*|ask-*)`, dispatch runs the reply handler and posts confirmation to `SKYLIGHT_FAMILY_TALK_ROOM`.
+
+## 7. Week-2 capacity (optional — busy OpenClaw + NC-GCS stacks)
+
+If Ops/Family Talk shows `lane wait exceeded` or LLM timeouts during heavy fleet cron:
+
+```bash
+bash ~/.openclaw/scripts/apply-test-week-cron-profile.sh
+OPENCLAW_SKYLIGHT_ROOT="$(pwd)" python3 scripts/install-openclaw-shell-cron.sh
+bash scripts/openclaw-ai-gates.sh --check
+bash ~/.openclaw/scripts/openclaw-day-review.sh --check
+```
+
+Set in `~/.openclaw/.env`:
+
+- `EMAIL_TO_EVENT_AUTO=0` until Family Hub S0 sign-off
+- `OPENCLAW_GATEWAY_HEALTH_URL=http://127.0.0.1:18789/health`
+- `MAVLINK_GATEWAY_HEALTH_URL=` (optional NC-GCS gateway URL)
+- `NEXTCLOUD_DB_BACKUP_DIR=` for backup-verification shell cron
+
+Full guide: [WEEK2-CAPACITY.md](WEEK2-CAPACITY.md). Restore after test week: `restore-cron-profile.sh`.

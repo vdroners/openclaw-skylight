@@ -1,4 +1,4 @@
-.PHONY: install gates scrub publish smoke household-gates mail-gates talk-gates ai-gates
+.PHONY: install gates scrub publish smoke household-gates mail-gates talk-gates ai-gates day-review shell-cron
 
 OPENCLAW_DIR ?= $(HOME)/.openclaw
 
@@ -29,6 +29,12 @@ talk-gates:
 
 ai-gates:
 	bash scripts/openclaw-ai-gates.sh --check
+
+day-review:
+	bash $(OPENCLAW_DIR)/scripts/openclaw-day-review.sh --check
+
+shell-cron:
+	OPENCLAW_SKYLIGHT_ROOT=$$(pwd) python3 scripts/install-openclaw-shell-cron.sh
 
 chore-fill-dry:
 	bash scripts/skylight-chores-fill-blanks.sh --dry-run

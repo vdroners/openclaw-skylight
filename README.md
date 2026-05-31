@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.4+-green.svg)](https://github.com/openclaw/openclaw)
-[![Release](https://img.shields.io/badge/release-v0.2.1-orange.svg)](CHANGELOG.md)
+[![Release](https://img.shields.io/badge/release-v0.2.2-orange.svg)](CHANGELOG.md)
 
 **OpenClaw skills + shell automation for Skylight Calendar frames** — household audit, propose-first Family Hub approvals, morning digests, and optional Nextcloud Mail enrichment.
 
@@ -21,6 +21,7 @@
 - [Nextcloud Mail (3 accounts)](#nextcloud-mail-3-accounts)
 - [OpenClaw integration](#openclaw-integration)
 - [Automation ladder](#automation-ladder)
+- [Week-2 capacity (Talk lane relief)](#week-2-capacity-talk-lane-relief)
 - [Gate matrix (QA)](#gate-matrix-qa)
 - [Repository layout](#repository-layout)
 - [Development workflow](#development-workflow)
@@ -38,9 +39,9 @@
 | Bundle | Purpose |
 |--------|---------|
 | **Skills** | `skylight`, `email-intelligence`, `flight-triage` — agent instructions |
-| **Scripts** | Auth, audit, propose/apply, Talk posts, mail sync, gate aggregators |
-| **Config** | JSON Schema for `household-model.json`, mail account templates, cron job stubs |
-| **Docs** | Setup, API quirks, full pass/fail gate matrix |
+| **Scripts** | Auth, audit, propose/apply, Talk posts, mail sync, gate aggregators, **shell-direct cron** |
+| **Config** | JSON Schema for `household-model.json`, mail account templates, cron job stubs, **cron-shell-direct.yaml** |
+| **Docs** | Setup, API quirks, full pass/fail gate matrix, **week-2 capacity guide** |
 
 It does **not** include NC-GCS fleet ops, HPB patches, or private operator runbooks. Those live in separate repos or local `~/.openclaw/`.
 
@@ -255,6 +256,30 @@ Operator guide: [docs/HOUSEHOLD-ENRICHMENT.md](docs/HOUSEHOLD-ENRICHMENT.md).
 
 ---
 
+## Week-2 capacity (Talk lane relief)
+
+**v0.2.2** addresses OpenClaw gateway starvation when fleet `agentTurn` cron runs every 10–20 minutes alongside Talk.
+
+| Component | Purpose |
+|-----------|---------|
+| **Shell-direct cron** | systemd timers + `run-openclaw-cron-shell.sh` — no LLM for hot paths |
+| **Test-week profile** | Reversibly disable ~21 heavy agentTurn jobs (`apply-test-week-cron-profile.sh`) |
+| **G-DAY gates** | `openclaw-day-review.sh` — PERF/CAP/SESS/NC metrics since profile baseline |
+| **Email auto gate** | `EMAIL_TO_EVENT_AUTO=0` until Family Hub S0 sign-off |
+
+```bash
+bash scripts/install-to-openclaw.sh --force
+bash ~/.openclaw/scripts/apply-test-week-cron-profile.sh
+OPENCLAW_SKYLIGHT_ROOT="$(pwd)" python3 scripts/install-openclaw-shell-cron.sh
+make ai-gates day-review
+```
+
+Restore: `bash ~/.openclaw/scripts/restore-cron-profile.sh`
+
+Full guide: [docs/WEEK2-CAPACITY.md](docs/WEEK2-CAPACITY.md). Manual UI gates: [docs/OPERATOR-MANUAL-GATES.md](docs/OPERATOR-MANUAL-GATES.md).
+
+---
+
 ## Gate matrix (QA)
 
 | Aggregator | Command | When |
@@ -262,15 +287,17 @@ Operator guide: [docs/HOUSEHOLD-ENRICHMENT.md](docs/HOUSEHOLD-ENRICHMENT.md).
 | Talk | `bash scripts/talk-response-audit.sh --check --phase all` | After Talk policy changes |
 | Mail | `bash scripts/mail-gates.sh --check` | After mail sync |
 | Household | `bash scripts/skylight-household-gates.sh` | Before sign-off |
-| OpenClaw AI | `bash scripts/openclaw-ai-gates.sh --check` | Cron + dispatch + TR-ALL |
+| OpenClaw AI | `bash scripts/openclaw-ai-gates.sh --check` | Cron + dispatch + TR-ALL + **G-DAY** |
+| Day review | `bash ~/.openclaw/scripts/openclaw-day-review.sh --check` | Daily during test week |
 | Publish | `bash scripts/publish-gates.sh` | Before git push |
 | Makefile | `make gates` | All of the above (except capabilities) |
+| Makefile | `make day-review` | G-DAY only |
 
 **Success criteria:** `mail-gates` and `skylight-household-gates` both report **`hard_fail=0`**.
 
 Full matrix: [docs/GATES.md](docs/GATES.md).
 
-Manual gates (operator): **C1**, **C2**, **C1b-LIVE**, **S0** — record PASS in your local enrichment doc.
+Manual gates (operator): **C1**, **C2**, **C1b-LIVE**, **DIS-5**, **S0**, **T3–T7** — [docs/OPERATOR-MANUAL-GATES.md](docs/OPERATOR-MANUAL-GATES.md).
 
 ---
 
@@ -283,19 +310,23 @@ openclaw-skylight/
 ├── config/
 │   ├── household-model.example.json   # + JSON Schema
 │   ├── mail-accounts.example.json
+│   ├── references/cron-shell-direct.yaml, test-week-cron-profile.yaml
 │   └── cron/*.job.json.template
 ├── scripts/
 │   ├── load-skylight-env.sh, load-nextcloud-env.sh
 │   ├── skylight-*.sh, skylight_*.py       # audit, propose, chores, recipes
 │   ├── talk-response-audit.sh, talk-post.sh
-│   ├── openclaw-ai-gates.sh, openclaw-catchup.sh
-│   ├── flight-triage-*.sh
+│   ├── openclaw-ai-gates.sh, openclaw-catchup.sh, openclaw-day-review.sh
+│   ├── run-openclaw-cron-shell.sh, install-openclaw-shell-cron.sh
+│   ├── flight-event-monitor.sh, email-to-event-shell.sh, backup-verify-shell.sh
+│   ├── apply-test-week-cron-profile.sh, restore-cron-profile.sh, cron-audit.sh
+│   ├── household-proposal-nudge.sh, flight-triage-*.sh
 │   ├── nc-mail-sync-accounts.sh, mail-gates.sh
 │   ├── install-to-openclaw.sh, Makefile
 │   ├── publish-gates.sh, scrub-for-publish.sh
 │   └── validate-*.sh
 ├── skills/skylight/, skills/email-intelligence/, skills/flight-triage/
-└── docs/                              # SETUP, GATES, OPENCLAW-STACK, plans/
+└── docs/                              # SETUP, GATES, OPENCLAW-STACK, WEEK2-CAPACITY, plans/
 ```
 
 Install symlinks repo scripts → `~/.openclaw/scripts/` and skills → `~/.openclaw/workspace/skills/`.
@@ -346,6 +377,8 @@ Import into OpenClaw cron after filling room tokens and schedule in your local c
 
 | Symptom | Fix |
 |---------|-----|
+| Ops Talk slow / lane wait | Week-2 profile + shell-direct — [docs/WEEK2-CAPACITY.md](docs/WEEK2-CAPACITY.md) |
+| False flight alerts | Configure `OPENCLAW_GATEWAY_HEALTH_URL`; mavlink optional |
 | `401` on Skylight API | `bash scripts/skylight-auth-refresh.sh` |
 | W-1 calendar probe fail | Set `SKYLIGHT_*_CALENDAR_ID` or `calendar_source_ids` in household model |
 | E2 timeout | Pin `FAMILY_MAIL_ACCOUNT_ID`; ensure inbox cached (`occ mail:account:sync`) |
@@ -359,7 +392,7 @@ More: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md), [docs/API-QUIRKS.md](d
 ## Related projects
 
 - **[NC-GCS](https://github.com/vdroners/NC-GCS)** — fleet ground control (separate repo; not bundled here)
-- **email-to-event** — future OpenClaw module; documented only, not shipped in v0.1.x
+- **email-to-event** — shell scan wrapper shipped; auto-create gated by `EMAIL_TO_EVENT_AUTO`
 
 ---
 

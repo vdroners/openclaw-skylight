@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Validate Alfred model routing vs openclaw.json + reference YAML maps.
+# Validate OpenClaw model routing vs openclaw.json + reference YAML maps.
 # Usage: validate-model-routing.sh --check
 set -euo pipefail
 

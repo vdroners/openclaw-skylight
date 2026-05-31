@@ -95,6 +95,33 @@ See [plans/skylight_chore_organization.md](plans/skylight_chore_organization.md)
 | AI-CRON-1..3 | Critical cron jobs status=ok within max age |
 | AI-CRON-4 | Shell-direct jobs disabled in OpenClaw cron |
 | DIS-1, DIS-3 | Family Hub dispatch dry-run + non-proposal exit 2 |
-| TR-ALL | `talk-response-audit.sh --phase all` |
+| CR-1 | email-daily-digest-post.sh DIGEST_POSTED |
+| MDL-ALL | validate-model-routing.sh |
+| CR-AUDIT | cron-audit.sh — critical shell-direct last_status=ok (backup deferred) |
+| TR-ALL | talk-response-audit.sh --phase all |
+| G-DAY | openclaw-day-review.sh — PERF/CAP/SESS/NC/E2E-AUTO (see below) |
+
+### G-DAY gates (`openclaw-day-review.sh --check`)
+
+Journal PERF metrics use `~/.openclaw/state/test-week-profile-applied.txt` as baseline when present.
+
+| Gate | PASS criteria |
+|------|---------------|
+| PERF-1 | Ops lane waits ≤5 since baseline |
+| PERF-2 | LLM timeouts ≤3 |
+| PERF-3 | Incomplete turns = 0 |
+| PERF-4 | Worst ops lane wait ≤120s (override: `PERF4_MAX_WAIT_S` in `.env`) |
+| PERF-5 | Morning digest + family brief posted today |
+| CAP-* | agentTurn disabled for shell-converted jobs |
+| CAP-F1/F2 | flight + email-to-event shell timers ran in 24h |
+| CAP-P1/P2 | ≤25 enabled agentTurn; no enabled */10 agentTurn |
+| SESS-1/2 | flight-event-monitor sessions ≤5; prune timer active |
+| NC-TALK-* | talk-post dry-run, retry, HPB, 502/503 count |
+| HOME-1 / HOME-ENGAGE | Batch freshness; warn if >10 pending, 0 applied |
+| E2E-AUTO | EMAIL_TO_EVENT_AUTO=0 |
+| CTX-1 | AGENTS.md ≤8192 chars |
+| DAY-1 | JSON summary written to logs/ |
+
+Full operator guide: [WEEK2-CAPACITY.md](WEEK2-CAPACITY.md). Manual UI gates: [OPERATOR-MANUAL-GATES.md](OPERATOR-MANUAL-GATES.md).
 
 

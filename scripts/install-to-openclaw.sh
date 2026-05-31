@@ -8,7 +8,7 @@ OPENCLAW_DIR="${OPENCLAW_DIR:-$HOME/.openclaw}"
 FORCE=0
 [[ "${1:-}" == "--force" ]] && FORCE=1
 
-mkdir -p "${OPENCLAW_DIR}/scripts" "${OPENCLAW_DIR}/workspace/skills" "${OPENCLAW_DIR}/config"
+mkdir -p "${OPENCLAW_DIR}/scripts" "${OPENCLAW_DIR}/workspace/skills" "${OPENCLAW_DIR}/config" "${OPENCLAW_DIR}/workspace/references"
 
 link_one() {
   local src="$1" dst="$2"
@@ -81,6 +81,15 @@ if [[ ! -f "${OPENCLAW_DIR}/config/household-model.json" ]]; then
   cp "${ROOT}/config/household-model.example.json" "${OPENCLAW_DIR}/config/household-model.json"
   echo "install: copied household-model.example.json → ~/.openclaw/config/household-model.json (edit with your IDs)"
 fi
+
+for ref in cron-shell-direct.yaml test-week-cron-profile.yaml; do
+  src="${ROOT}/config/references/${ref}"
+  dst="${OPENCLAW_DIR}/workspace/references/${ref}"
+  if [[ -f "$src" && ! -f "$dst" ]]; then
+    cp "$src" "$dst"
+    echo "install: copied workspace/references/${ref} (edit locally; not overwritten on re-install)"
+  fi
+done
 
 export OPENCLAW_SKYLIGHT_ROOT="$ROOT"
 
