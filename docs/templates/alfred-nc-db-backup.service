@@ -1,0 +1,12 @@
+[Unit]
+Description=Nextcloud DB backup (Alfred stack)
+After=docker.service
+
+[Service]
+Type=oneshot
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+EnvironmentFile=-%h/.openclaw/.env
+ExecStart=/bin/bash %h/.openclaw/scripts/nc-db-backup-run.sh
+
+[Install]
+WantedBy=default.target

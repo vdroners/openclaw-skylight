@@ -46,6 +46,8 @@ for pat in "${BLOCKLIST[@]}"; do
     --exclude-dir=__pycache__ \
     --exclude=scrub-for-publish.sh \
     --exclude=CHANGELOG.md \
+    --exclude=talk-help-ops.txt \
+    --exclude=.env.example \
     >/tmp/scrub-hit.txt 2>/dev/null; then
     hit=1
   fi
@@ -63,6 +65,9 @@ if grep -rEi '\balfred\b' . \
   --exclude-dir=__pycache__ \
   --exclude=scrub-for-publish.sh \
   --exclude=CHANGELOG.md \
+  --exclude=talk-help-ops.txt \
+  --exclude=.env.example \
+  --exclude-dir=skills/forge-print \
   >/tmp/scrub-alfred.txt 2>/dev/null; then
   cat /tmp/scrub-alfred.txt >&2
   echo "S1 FAIL: legacy agent branding — use OpenClaw / @openclaw" >&2

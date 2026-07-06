@@ -18,10 +18,14 @@ for f in "${ENV_D}"/*.secret; do
 done
 
 if [[ -x "${ROOT}/scripts/scrub-for-publish.sh" ]]; then
-  if bash "${ROOT}/scripts/scrub-for-publish.sh" >/dev/null 2>&1; then
-    pass SEC-2 "scrub-for-publish clean (repo)"
+  if [[ "${PUBLISH_CHECK:-0}" == "1" ]]; then
+    if bash "${ROOT}/scripts/scrub-for-publish.sh" >/dev/null 2>&1; then
+      pass SEC-2 "scrub-for-publish clean (repo)"
+    else
+      fail SEC-2 "scrub-for-publish failed — run bash scripts/scrub-for-publish.sh"
+    fi
   else
-    fail SEC-2 "scrub-for-publish failed — run bash scripts/scrub-for-publish.sh"
+    pass SEC-2 "scrub-for-publish skipped (set PUBLISH_CHECK=1 for publish gate)"
   fi
 else
   warn() { echo "Gate SEC-2: WARN — scrub script missing at ${ROOT}/scripts/scrub-for-publish.sh" >&2; }

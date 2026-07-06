@@ -4,7 +4,40 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **Forge Alfred follow-up:** docker webhook relay on CPM network (`setup-forge-webhook-relay-docker.sh`); CPM upstream auto-detect; `disable-root-nc-backup-cron.sh`; NC DB backup systemd templates
+- `docs/FORGE-INTEGRATION.md` — operator guide (docker relay, backup timer, E2E sign-off)
+
 ### Changed
+
+- `nc-db-backup-run.sh` — MYSQL_PASSWORD from `~/.openclaw/.env` or `cloud_db` env (no hardcoded default)
+- `forge-gates.sh` — docker relay I1; I6 POST probe; W2 delivery check
+- `.env.example` — `FORGE_CPM_UPSTREAM_HOST`, backup env vars
+- `validate-mail-secrets.sh` / `scrub-for-publish.sh` — SEC-2 operator scope
+- `test-week-cron-profile.yaml` — stuck agentTurn jobs removed
+
+### Added
+
+- **SKY-30..33 recipe Talk + meal tools:** recipe/bread fast-path in Talk shim; lookup CLI; bread bake timer; meal-plan propose/apply; recipe dedupe; full BB snapshot sync
+- `scripts/skylight-recipe-talk-fast-path.sh`, `scripts/lib/recipe_talk_match.py` — `@alfred recipe` / `@alfred bread` (no LLM)
+- `scripts/skylight-recipe-lookup.sh` — CLI lookup shared with Talk fast-path
+- `scripts/skylight-bread-timer.sh` — start + scheduled completion Talk post
+- `scripts/skylight-meal-plan-propose.sh` — weekly dinner plan with YES/NO via `createSitting`
+- `scripts/skylight-recipe-dedupe.sh` + `skylight-curate-recipes.py --dedupe-only`
+- `scripts/skylight-sync-all-bb-recipes.sh` — batch import all manifest sections
+- `scripts/talk-webhook-shim.py` — recipe fast-path routing (installed to `~/.openclaw/talk-webhook-shim.py`)
+- **Web recipe adaptations (BB-PDC20 section 16):** six recipes in snapshot library (`16-web-adaptations/`) — machine WHITE/CAKE courses plus manual Copeland biscuits; Southern Living raisin enrichment in factory `raisin-bread.md`
+- `scripts/skylight-sync-web-recipes.sh` — import web section + curate BB manifest on Skylight
+- `scripts/skylight-recipe-gates.sh` — P12 parse/import gates for web adaptations
+- `docs/SKYLIGHT-RECIPES.md` — operator guide for recipe library and Alfred commands
+- Makefile targets: `recipes-gates`, `recipes-web-sync`, `recipes-full-sync`
+- `skylight_recipe_lib.py`: `BB_SNAPSHOT`, `WEB_ADAPTATIONS_SECTION`, `prep_type_from_markdown`, `machine_line_ok`, manifest helpers; section `16-web-adaptations` → Snack
+
+### Changed
+
+- `skylight-import-recipes-batch.sh` — default meal category auto from section folder (was hardcoded Snack)
+- `skylight-import-recipes-verify.sh` — P12 accepts manual oven recipes (`Oven:` / not used) in addition to `Course:`
 
 - **MySubaru / vehicle integration** moved to sibling repo **openclaw-subaru** (private). Install both into `~/.openclaw` if you use Skylight + Subaru.
 

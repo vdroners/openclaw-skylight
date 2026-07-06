@@ -1,0 +1,9 @@
+[Unit]
+Description=Daily Nextcloud DB backup at 03:05
+
+[Timer]
+OnCalendar=*-*-* 03:05:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
