@@ -1,0 +1,14 @@
+Alfred — Ops / OpenClaw AI quick guide
+
+• Always mention @alfred for fleet, gateway, and ops questions.
+• Email-to-event proposals:
+  @alfred YES e2e-abc123
+  @alfred NO e2e-abc123
+• Subaru: @alfred subaru status
+• Forge: @alfred print status | @alfred print queue | @alfred print help
+• Flight triage proposals:
+  @alfred YES triage-123456
+  @alfred NO triage-123456
+• This help: @alfred help
+
+Automated health/watchdog/flight alerts post to the Alfred Automation room (not this chat).

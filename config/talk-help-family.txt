@@ -1,0 +1,19 @@
+Alfred — Family Hub quick guide
+
+• Ask anything about calendar, chores, meals, or groceries — no @ needed.
+• Review household proposals from the morning digest:
+  @alfred YES enrich-chore-023
+  @alfred NO enrich-chore-023
+  @alfred EDIT enrich-chore-023 your note here
+  @alfred YES meal-plan-2026-w23
+• Recipes (no LLM — instant lookup):
+  @alfred recipe banana
+  @alfred recipe list web
+  @alfred bread courses
+  @alfred bread start lavender-thyme medium
+• Meal plan: @alfred meal plan  → Sunday card for YES/NO
+• Chores: @alfred chores | @alfred done dishes
+• Subaru: @alfred subaru status
+• This help: @alfred help
+
+If no reply within ~2 minutes, try once more. Alfred posts "Got it — checking…" while thinking.

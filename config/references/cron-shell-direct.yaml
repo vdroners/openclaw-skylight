@@ -50,3 +50,24 @@ jobs:
     success_grep: BACKUP_OK
     schedule: "0 4 * * *"
     tz: America/Los_Angeles
+
+  - id: f1a2b3c4-forge-print-monitor
+    name: forge-print-monitor
+    script: ${OPENCLAW_DIR}/scripts/forge-print-monitor.sh
+    success_grep: FORGE_MONITOR
+    schedule: "*/5 0-23 * * *"
+    tz: America/Los_Angeles
+
+  - id: a1b2c3d4-skylight-meal-plan
+    name: skylight-meal-plan
+    script: ${OPENCLAW_DIR}/scripts/skylight-meal-plan-propose.sh
+    success_grep: meal-plan-
+    schedule: "0 9 * * 0"
+    tz: America/Los_Angeles
+
+  - id: b3c4d5e6-flight-triage-scan
+    name: flight-triage-scan
+    script: ${OPENCLAW_DIR}/scripts/flight-triage-shell.sh
+    success_grep: FLIGHT_TRIAGE_SHELL
+    schedule: "*/30 8-18 * * *"
+    tz: America/Los_Angeles

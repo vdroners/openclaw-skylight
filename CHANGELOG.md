@@ -6,10 +6,25 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **Alfred New Capabilities:** Family Hub shim fast-paths (help, recipe, meal-plan propose, chores/done), weekly `skylight-meal-plan` shell cron, flight-triage scan timer + Ops YES/NO dispatch
+- `scripts/skylight-chore-talk-fast-path.sh` + `lib/chore_talk_match.py` — `@alfred chores` / `@alfred done …`
+- `scripts/skylight-meal-plan-talk-fast-path.sh` — `@alfred meal plan`
+- `scripts/flight-triage-shell.sh` — scan → propose newest unseen BIN
+- `.cursor/plans/alfred_new_capabilities.md`
+
+### Changed
+
+- `talk-webhook-shim.py` — meal-plan proposal regex; help/recipe/meal/chore/forge before LLM; no silent plugin fallback
+- `flight-triage-dispatch.sh` / `flight-triage-propose.sh` — `@alfred` mention + intake on YES
+- `cron-shell-direct.yaml` — Sunday meal-plan + weekday flight-triage-scan timers
+- `docs/NEXTCLOUD-TALK.md`, `docs/FLIGHT-TRIAGE.md`, Talk help texts, skylight SKILL
+
+### Added (prior)
+
 - **Forge Alfred follow-up:** docker webhook relay on CPM network (`setup-forge-webhook-relay-docker.sh`); CPM upstream auto-detect; `disable-root-nc-backup-cron.sh`; NC DB backup systemd templates
 - `docs/FORGE-INTEGRATION.md` — operator guide (docker relay, backup timer, E2E sign-off)
 
-### Changed
+### Changed (prior)
 
 - `nc-db-backup-run.sh` — MYSQL_PASSWORD from `~/.openclaw/.env` or `cloud_db` env (no hardcoded default)
 - `forge-gates.sh` — docker relay I1; I6 POST probe; W2 delivery check
