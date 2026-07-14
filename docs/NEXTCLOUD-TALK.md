@@ -46,7 +46,12 @@ Inbound webhooks still use the Talk bot registration; only **outbound** appearan
 
 ## Inbound routing matrix (Family Hub `9x4f25n3`)
 
-NC Talk bot posts to **`:8788`** (`talk-webhook-shim.py`). Order matters:
+NC Talk bot posts to **`:8788`** (`talk-webhook-shim.py`) at the host LAN address
+(`http://10.0.0.84:8788/...`). The shim **must** bind `0.0.0.0` (`TALK_SHIM_HOST=0.0.0.0`
+in `talk-webhook-shim.service`) — loopback-only breaks Family Hub because `cloud_app`
+cannot reach `127.0.0.1` on the host.
+
+Order matters:
 
 | Message pattern | Handler | LLM? |
 |-----------------|---------|------|

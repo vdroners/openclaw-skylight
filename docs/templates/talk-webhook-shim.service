@@ -1,0 +1,21 @@
+[Unit]
+Description=Nextcloud Talk webhook shim (Subaru/Family Hub fast-path on :8788)
+After=network-online.target openclaw-gateway.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=-%h/.openclaw/.env
+Environment=TALK_SHIM_PORT=8788
+# NC Talk bot posts to http://10.0.0.84:8788 — bind all interfaces (not 127.0.0.1).
+Environment=TALK_SHIM_HOST=0.0.0.0
+Environment=TALK_SHIM_UPSTREAM=http://127.0.0.1:8787/nextcloud-talk-webhook
+Environment=OPENCLAW_AGENT_MENTION=@alfred
+Environment=SKYLIGHT_FAMILY_TALK_ROOM=9x4f25n3
+Environment=GATEWAY_URL=http://127.0.0.1:18789
+ExecStart=/usr/bin/python3 %h/.openclaw/talk-webhook-shim.py
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target
