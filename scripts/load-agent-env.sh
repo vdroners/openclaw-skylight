@@ -2,7 +2,7 @@
 # Agent mention alias for Talk proposal commands (override in .env if needed).
 set -euo pipefail
 
-export OPENCLAW_AGENT_MENTION="${OPENCLAW_AGENT_MENTION:-@openclaw}"
+export OPENCLAW_AGENT_MENTION="${OPENCLAW_AGENT_MENTION:-@alfred}"
 export OPENCLAW_AGENT_NAME="${OPENCLAW_AGENT_NAME:-${OPENCLAW_AGENT_MENTION#@}}"
 
 AGENT_HOUSEHOLD_MODEL="${HOUSEHOLD_MODEL_JSON:-}"

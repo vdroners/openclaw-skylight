@@ -2,6 +2,7 @@
 # Shell-direct NC-GCS flight/fleet/gateway monitor (no LLM).
 # Usage: flight-event-monitor.sh
 # Exit 0 + FLIGHT_MONITOR_OK when quiet; FLIGHT_ALERT_POSTED when alert sent.
+# Large /api/flights payloads MUST go via temp files (never argv) — ARG_MAX footgun.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -16,23 +17,39 @@ NC_GCS_BASE="${NEXTCLOUD_URL%/}/apps/nc_gcs/api"
 AUTH=(-u "${NEXTCLOUD_USER}:${NEXTCLOUD_PASS}")
 HDRS=(-H "OCS-APIRequest: true" -H "Accept: application/json")
 
-flights="$(curl -sS --max-time 20 "${AUTH[@]}" "${HDRS[@]}" "${NC_GCS_BASE}/flights" 2>/dev/null || echo '{}')"
-fleet="$(curl -sS --max-time 20 "${AUTH[@]}" "${HDRS[@]}" "${NC_GCS_BASE}/fleet/status" 2>/dev/null || echo '{}')"
+TMP=$(mktemp -d /tmp/flight-event-monitor.XXXXXX)
+cleanup() { rm -rf "$TMP"; }
+trap cleanup EXIT
+
+curl -sS --max-time 20 "${AUTH[@]}" "${HDRS[@]}" "${NC_GCS_BASE}/flights" -o "$TMP/flights.json" 2>/dev/null \
+  || echo '{}' >"$TMP/flights.json"
+curl -sS --max-time 20 "${AUTH[@]}" "${HDRS[@]}" "${NC_GCS_BASE}/fleet/status" -o "$TMP/fleet.json" 2>/dev/null \
+  || echo '{}' >"$TMP/fleet.json"
 gw_resp="$(curl -sS -w $'\n__HTTP_CODE__%{http_code}' --max-time 15 "$GATEWAY_HEALTH_URL" 2>/dev/null || echo $'\n__HTTP_CODE__000')"
 gw_code="${gw_resp##*$'\n__HTTP_CODE__'}"
-gw="${gw_resp%$'\n__HTTP_CODE__'*}"
+printf '%s' "${gw_resp%$'\n__HTTP_CODE__'*}" >"$TMP/gw.json"
 mavlink_code="000"
 if [[ -n "$MAVLINK_GATEWAY_HEALTH_URL" ]]; then
   mavlink_code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 5 "$MAVLINK_GATEWAY_HEALTH_URL" 2>/dev/null || echo 000)"
 fi
+printf '%s' "$gw_code" >"$TMP/gw_code"
+printf '%s' "$mavlink_code" >"$TMP/mavlink_code"
+export FEM_TMP="$TMP"
 
-read -r active_count online_count gw_down summary <<<"$(python3 - "$flights" "$fleet" "$gw" "$gw_code" "$mavlink_code" <<'PY'
-import json, sys
-flights = json.loads(sys.argv[1] or "{}")
-fleet = json.loads(sys.argv[2] or "{}")
-gw_raw = sys.argv[3]
-gw_code = sys.argv[4]
-mavlink_code = sys.argv[5]
+set +e
+parse_out=$(python3 <<'PY'
+import json
+from pathlib import Path
+base = Path(__import__("os").environ["FEM_TMP"])
+try:
+    flights = json.loads(base.joinpath("flights.json").read_text() or "{}")
+    fleet = json.loads(base.joinpath("fleet.json").read_text() or "{}")
+    gw_raw = base.joinpath("gw.json").read_text()
+    gw_code = base.joinpath("gw_code").read_text().strip()
+    mavlink_code = base.joinpath("mavlink_code").read_text().strip()
+except Exception as e:
+    print(f"FLIGHT_MONITOR_ERROR parse={e}", flush=True)
+    raise SystemExit(2)
 active = []
 if isinstance(flights, list):
     active = [f for f in flights if str(f.get("status", "")).lower() == "active"]
@@ -65,16 +82,24 @@ if online:
     parts.append(f"{online} vehicle(s) online")
 if gw_down:
     parts.append("openclaw gateway down")
-# Mavlink gateway is optional from homelab; only note when fleet activity exists.
 if (active or online) and str(mavlink_code) not in ("200", "000") and not str(mavlink_code).startswith("2"):
     parts.append("mavlink gateway unreachable")
 summary = "; ".join(parts) if parts else ""
-print(len(active), online, gw_down, summary)
+print(f"{len(active)} {online} {gw_down} {summary}")
 PY
-)"
+)
+prc=$?
+set -e
 
-if [[ -z "$summary" ]]; then
-  echo "FLIGHT_MONITOR_OK active=0 online=${online_count} gateway=up"
+if [[ $prc -ne 0 ]]; then
+  echo "FLIGHT_MONITOR_ERROR python_rc=$prc"
+  exit 1
+fi
+
+read -r active_count online_count gw_down summary <<<"$parse_out"
+
+if [[ -z "${summary:-}" ]]; then
+  echo "FLIGHT_MONITOR_OK active=${active_count:-0} online=${online_count:-0} gateway=up"
   exit 0
 fi
 

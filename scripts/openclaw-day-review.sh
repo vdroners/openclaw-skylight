@@ -46,6 +46,20 @@ shell_timer_ok_today() {
   exit 2
 }
 
+# GW-1 gateway liveness (hard fail — matches talk-response-audit G0-1/G0-1b/G0-4)
+systemctl --user is-active openclaw-gateway >/dev/null 2>&1 \
+  && ok "GW-1 openclaw-gateway active" || bad "GW-1 openclaw-gateway not active"
+systemctl --user is-enabled openclaw-gateway >/dev/null 2>&1 \
+  && ok "GW-1b openclaw-gateway enabled" || bad "GW-1b openclaw-gateway disabled"
+GW_CODE=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 10 http://127.0.0.1:18789/health 2>/dev/null || echo 000)
+[[ "$GW_CODE" == "200" ]] && ok "GW-2 gateway /health -> $GW_CODE" || bad "GW-2 gateway /health -> $GW_CODE"
+TALK_PORT="${OPENCLAW_TALK_PLUGIN_PORT:-8787}"
+if ss -tln 2>/dev/null | grep -q ":${TALK_PORT} "; then
+  ok "GW-3 nextcloud-talk plugin listening on :${TALK_PORT}"
+else
+  bad "GW-3 nextcloud-talk plugin not listening on :${TALK_PORT}"
+fi
+
 # PERF-1..4
 OPS_ROOM="${SKYLIGHT_OPS_TALK_ROOM:?set SKYLIGHT_OPS_TALK_ROOM}"
 OPS_WAITS=$(journal_count "lane wait exceeded.*${OPS_ROOM}" openclaw-gateway "$JOURNAL_SINCE")
@@ -70,23 +84,46 @@ else bad "PERF-3 incomplete turns=${INCOMPLETE}/24h"; fi
 if [[ "$WORST_S" -le "$PERF4_MAX" ]]; then ok "PERF-4 worst ops lane wait=${WORST_S}s (max ${PERF4_MAX}s)"
 else bad "PERF-4 worst ops lane wait=${WORST_S}s (max ${PERF4_MAX}s)"; fi
 
-CRON_PREFIX="${OPENCLAW_CRON_UNIT_PREFIX:-openclaw-cron}"
-
 morning_timer_ok() {
   local token="$1"
   shell_timer_ok_today "${CRON_PREFIX}-email-daily-digest.service" "$token"
 }
 
-# PERF-5 morning posts
-if morning_timer_ok DIGEST_POSTED \
+# PERF-5 morning posts (skip false fail before 07:35 local)
+NOW_H=$(date +%H)
+NOW_M=$(date +%M)
+if [[ "$NOW_H" -lt 7 ]] || { [[ "$NOW_H" -eq 7 ]] && [[ "$NOW_M" -lt 35 ]]; }; then
+  ok "PERF-5 morning posts deferred (before 07:35 local)"
+elif morning_timer_ok DIGEST_POSTED \
    && shell_timer_ok_today "${CRON_PREFIX}-skylight-family-morning.service" SKYLIGHT_FAMILY_BRIEF_POSTED; then
   ok "PERF-5 morning digest + family brief posted today"
 else
   bad "PERF-5 morning posts missing today (digest or family brief)"
 fi
 
-# CAP-F1 / CAP-F2
-if [[ -f "$JOBS" ]]; then
+# CAP shell-direct duplicates — prefer openclaw cron JSON, fallback jobs.json
+CRON_JSON="$(openclaw cron list --json 2>/dev/null || true)"
+if [[ -n "$CRON_JSON" ]]; then
+  while IFS= read -r line; do
+    case "$line" in
+      PASS*) ok "${line#PASS }" ;;
+      FAIL*) bad "${line#FAIL }" ;;
+    esac
+  done < <(printf '%s' "$CRON_JSON" | python3 -c "
+import json, sys
+data = json.loads(sys.stdin.read())
+jobs = {j['name']: j for j in data.get('jobs', [])}
+for name, expect_disabled in (('flight-event-monitor', True), ('email-to-event', True)):
+    j = jobs.get(name) or {}
+    en = j.get('enabled', False)
+    if expect_disabled and en:
+        print(f'FAIL CAP shell job {name} agentTurn still enabled')
+    elif expect_disabled:
+        print(f'PASS CAP agentTurn disabled for {name}')
+    else:
+        print(f'PASS CAP {name} ok')
+")
+elif [[ -f "$JOBS" ]]; then
   python3 - "$JOBS" <<'PY' | while read -r line; do
 import json, sys
 jobs = {j["name"]: j for j in json.loads(open(sys.argv[1]).read()).get("jobs", [])}
@@ -105,14 +142,21 @@ PY
       FAIL*) bad "${line#FAIL }" ;;
     esac
   done
+else
+  bad "CAP cron store unreadable (openclaw cron list and jobs.json missing)"
 fi
 
 shell_timer_ran() {
   local grep_token="$1"
   shift
-  local unit
+  local unit n
   for unit in "$@"; do
-    if journalctl --user -u "${unit}.service" --since "24 hours ago" --no-pager 2>/dev/null | grep -q "$grep_token"; then
+    local svc="${unit}"
+    [[ "$svc" != *.service ]] && svc="${unit}.service"
+    # grep -q in a pipeline triggers SIGPIPE (exit 141) under pipefail when journalctl still writes
+    n="$(journalctl --user -u "$svc" --since "24 hours ago" --no-pager 2>/dev/null \
+      | grep -c "$grep_token" || true)"
+    if [[ "$n" -gt 0 ]]; then
       return 0
     fi
   done
@@ -126,6 +170,15 @@ else
   warn "CAP-F1 flight-event-monitor shell timer not seen yet (install timers)"
 fi
 
+# CAP-F1b: ARG_MAX / Argument list too long must not recur
+ARGMAX_N="$(journalctl --user -u "${CRON_PREFIX}-flight-event-monitor.service" --since "24 hours ago" --no-pager 2>/dev/null \
+  | grep -c 'Argument list too long' || true)"
+if [[ "${ARGMAX_N:-0}" -eq 0 ]]; then
+  ok "CAP-F1b flight-event-monitor 0x Argument list too long in 24h"
+else
+  bad "CAP-F1b flight-event-monitor ARG_MAX count=${ARGMAX_N} in 24h"
+fi
+
 if shell_timer_ran 'email-to-event:' "${CRON_PREFIX}-email-to-event"; then
   ok "CAP-F2 email-to-event shell timer ran in 24h"
 else
@@ -133,14 +186,29 @@ else
 fi
 
 # CAP-P1 enabled agentTurn count
-if [[ -f "$JOBS" ]]; then
+if [[ -n "$CRON_JSON" ]]; then
+  AGENT_N=$(printf '%s' "$CRON_JSON" | python3 -c "import json,sys; j=json.loads(sys.stdin.read()); print(sum(1 for x in j.get('jobs',[]) if x.get('enabled') and (x.get('payload') or {}).get('kind')=='agentTurn'))")
+  if [[ "$AGENT_N" -le 25 ]]; then ok "CAP-P1 enabled agentTurn=${AGENT_N} (max 25)"
+  else bad "CAP-P1 enabled agentTurn=${AGENT_N} (max 25)"; fi
+elif [[ -f "$JOBS" ]]; then
   AGENT_N=$(python3 -c "import json; j=json.load(open('$JOBS')); print(sum(1 for x in j.get('jobs',[]) if x.get('enabled') and (x.get('payload') or {}).get('kind')=='agentTurn'))")
   if [[ "$AGENT_N" -le 25 ]]; then ok "CAP-P1 enabled agentTurn=${AGENT_N} (max 25)"
   else bad "CAP-P1 enabled agentTurn=${AGENT_N} (max 25)"; fi
+else
+  bad "CAP-P1 cron store unreadable"
 fi
 
 # CAP-P2 no */10 agentTurn
-if [[ -f "$JOBS" ]]; then
+if [[ -n "$CRON_JSON" ]]; then
+  BAD=$(printf '%s' "$CRON_JSON" | python3 -c "
+import json, sys
+j=json.loads(sys.stdin.read())
+bad=[x['name'] for x in j.get('jobs',[]) if x.get('enabled') and (x.get('payload') or {}).get('kind')=='agentTurn' and '*/10' in ((x.get('schedule') or {}).get('expr') or '')]
+print(len(bad))
+")
+  if [[ "$BAD" -eq 0 ]]; then ok "CAP-P2 no enabled */10 agentTurn jobs"
+  else bad "CAP-P2 found ${BAD} enabled */10 agentTurn jobs"; fi
+elif [[ -f "$JOBS" ]]; then
   BAD=$(python3 -c "
 import json
 j=json.load(open('$JOBS'))
@@ -149,6 +217,18 @@ print(len(bad))
 ")
   if [[ "$BAD" -eq 0 ]]; then ok "CAP-P2 no enabled */10 agentTurn jobs"
   else bad "CAP-P2 found ${BAD} enabled */10 agentTurn jobs"; fi
+fi
+
+# CAP-CRON-ERR enabled jobs stuck in error
+CAP_CRON_ERR_MAX="${CAP_CRON_ERR_MAX:-3}"
+if [[ -n "$CRON_JSON" ]]; then
+  ERR_N=$(printf '%s' "$CRON_JSON" | python3 -c "
+import json, sys
+j=json.loads(sys.stdin.read())
+print(sum(1 for x in j.get('jobs',[]) if x.get('enabled') and (x.get('state') or {}).get('consecutiveErrors',0) >= 3))
+")
+  if [[ "$ERR_N" -le "$CAP_CRON_ERR_MAX" ]]; then ok "CAP-CRON-ERR stuck cron jobs (consecutiveErrors>=3)=${ERR_N} (max ${CAP_CRON_ERR_MAX})"
+  else bad "CAP-CRON-ERR stuck cron jobs (consecutiveErrors>=3)=${ERR_N} (max ${CAP_CRON_ERR_MAX})"; fi
 fi
 
 # SESS-1
@@ -212,13 +292,14 @@ PY
   done
 fi
 
-# E2E-AUTO
+# E2E-AUTO — gate on .env + shell wrapper (email-to-event-scan.sh may be operator-local)
 export EMAIL_TO_EVENT_AUTO="${EMAIL_TO_EVENT_AUTO:-0}"
+E2E_SHELL="${SCRIPT_DIR}/email-to-event-shell.sh"
 if grep -q '^EMAIL_TO_EVENT_AUTO=0' "${OPENCLAW}/.env" 2>/dev/null \
-   && grep -q 'EMAIL_TO_EVENT_AUTO' "${SCRIPT_DIR}/email-to-event-scan.sh"; then
-  ok "E2E-AUTO EMAIL_TO_EVENT_AUTO=0 in .env + script guard"
+   && [[ -x "$E2E_SHELL" ]]; then
+  ok "E2E-AUTO EMAIL_TO_EVENT_AUTO=0 in .env + email-to-event-shell.sh present"
 else
-  bad "E2E-AUTO EMAIL_TO_EVENT_AUTO not gated (expect 0 in .env until S0)"
+  bad "E2E-AUTO EMAIL_TO_EVENT_AUTO not gated (expect 0 in .env + ${E2E_SHELL})"
 fi
 
 # CTX-1

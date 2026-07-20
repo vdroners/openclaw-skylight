@@ -176,6 +176,34 @@ else
   bad "TR-ALL talk-response-audit.sh missing"
 fi
 
+# FT-* / G-ALF flight-triage gates
+FT_GATES=""
+for cand in \
+  "${OPENCLAW}/scripts/openclaw-flight-triage-gates.sh" \
+  "${OPENCLAW}/scripts/alfred-flight-triage-gates.sh" \
+  "/media/4TB/openclaw-skylight/scripts/openclaw-flight-triage-gates.sh"
+do
+  if [[ -x "$cand" ]]; then FT_GATES="$cand"; break; fi
+done
+if [[ -n "$FT_GATES" ]]; then
+  if bash "$FT_GATES" >/tmp/ai-ft-gates.out 2>&1; then
+    ok "FT-ALL openclaw-flight-triage-gates"
+  else
+    bad "FT-ALL flight-triage gates failed: $(grep ' FAIL ' /tmp/ai-ft-gates.out | head -3 | tr '\n' '; ')"
+  fi
+else
+  bad "FT-ALL openclaw-flight-triage-gates.sh missing"
+fi
+
+# FORGE-* 3DPrintForge integration gates
+if [[ "${FORGE_ENABLED:-0}" == "1" ]] && [[ -x "${OPENCLAW}/scripts/forge-gates.sh" ]]; then
+  if bash "${OPENCLAW}/scripts/forge-gates.sh" --check --phase infra,cfg,webhook,monitor,fastpath,talk >/tmp/ai-forge-gates.out 2>&1; then
+    ok "FORGE-ALL automated forge gates"
+  else
+    bad "FORGE-ALL forge gates failed: $(grep '^FAIL' /tmp/ai-forge-gates.out | head -3 | tr '\n' '; ')"
+  fi
+fi
+
 # G-DAY week-2 perf / cap / sess gates
 if [[ -x "${OPENCLAW}/scripts/openclaw-day-review.sh" ]]; then
   set +e

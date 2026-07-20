@@ -42,3 +42,8 @@ fi
 : "${NEXTCLOUD_URL:?NEXTCLOUD_URL not set — export or add to .env}"
 : "${NEXTCLOUD_USER:?NEXTCLOUD_USER not set}"
 : "${NEXTCLOUD_PASS:?NEXTCLOUD_PASS not set}"
+
+# Aliases used by flight-triage-scan / intake (NC_* family)
+export NC_URL="${NC_URL:-$NEXTCLOUD_URL}"
+export NC_WEBDAV_USERNAME="${NC_WEBDAV_USERNAME:-$NEXTCLOUD_USER}"
+export NC_WEBDAV_PASSWORD="${NC_WEBDAV_PASSWORD:-$NEXTCLOUD_PASS}"

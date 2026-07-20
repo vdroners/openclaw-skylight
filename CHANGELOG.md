@@ -4,7 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Alfred SITL / flight-triage Path B:** `@alfred` YES/NO dispatch (exit 2 non-match), YES→intake, propose talk-post arg order, `NEXTCLOUD_*`→`NC_*` scan aliases, flight-event-monitor ARG_MAX via temp files, `load-agent-env` default `@alfred`
+- Daily QA flight-cycle schema drift (now versioned under nc-gcs `scripts/qa/`)
+
 ### Added
+
+- `openclaw-flight-triage-gates.sh` G-ALF-03c/06/08 + G-FEM-*; FT-ALL wired into `openclaw-ai-gates.sh`; CAP-F1b ARG_MAX journal check; `gate-path-a-triage-talk.sh`
+- `alfred-flight-triage-gates.sh` aggregator; `run-qa-flight-test-cron.sh` (G-QA-CRON-EXIT)
+
+### Added (prior capabilities)
 
 - **Alfred New Capabilities:** Family Hub shim fast-paths (help, recipe, meal-plan propose, chores/done), weekly `skylight-meal-plan` shell cron, flight-triage scan timer + Ops YES/NO dispatch
 - `scripts/skylight-chore-talk-fast-path.sh` + `lib/chore_talk_match.py` — `@alfred chores` / `@alfred done …`
@@ -14,10 +24,13 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- **Recipe Sidekick cleanup:** household title/body polish (Title Case, Ingredients/Instructions, marketing renames); Tomato Sauce hand-mix Sidekick (no false Course 11)
+- `skylight_recipe_lib.py` — `title_case_recipe`, stronger `normalize_household_description` (ALL-CAPS dumps, Directions→Instructions)
+- `skylight-curate-recipes.py` — RENAME map for oatmeal pancakes, black bean soup, biscuits, brownies, avocado veggie roll
 - `talk-webhook-shim.py` — meal-plan proposal regex; help/recipe/meal/chore/forge before LLM; no silent plugin fallback
 - `flight-triage-dispatch.sh` / `flight-triage-propose.sh` — `@alfred` mention + intake on YES
 - `cron-shell-direct.yaml` — Sunday meal-plan + weekday flight-triage-scan timers
-- `docs/NEXTCLOUD-TALK.md`, `docs/FLIGHT-TRIAGE.md`, Talk help texts, skylight SKILL
+- `docs/NEXTCLOUD-TALK.md`, `docs/FLIGHT-TRIAGE.md`, `docs/SKYLIGHT-RECIPES.md`, Talk help texts, skylight SKILL
 
 ### Added (prior)
 

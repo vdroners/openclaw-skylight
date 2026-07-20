@@ -25,6 +25,10 @@ if [[ -z "$scan_raw" ]]; then
   echo "FLIGHT_TRIAGE_SHELL no bins (empty scan)"
   exit 0
 fi
+if echo "$scan_raw" | grep -q '"error"'; then
+  echo "FLIGHT_TRIAGE_SHELL scan_error ${scan_raw}"
+  exit 1
+fi
 
 export scan_raw SEEN_FILE STATE_DIR OPS_ROOM MENTION DRY SCRIPT_DIR
 python3 <<'PY'
