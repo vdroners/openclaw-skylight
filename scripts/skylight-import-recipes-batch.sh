@@ -8,7 +8,7 @@ IMPORT="${SCRIPT_DIR}/skylight-import-recipes.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR}/load-skylight-env.sh"
 
-CATEGORY="Snack"
+CATEGORY=""
 LIMIT=0
 DRY=0
 FORCE=0
@@ -22,7 +22,7 @@ while [[ $# -gt 0 ]]; do
     --force) FORCE=1; shift ;;
     -h|--help)
       echo "Usage: $0 [--category Snack] [--limit N] [--dry-run] [--force] <recipe-root-dir>"
-      echo "  Default: skip recipes whose title already exists in Skylight."
+      echo "  Default category: auto from section folder (see skylight_recipe_lib SECTION_CATEGORY)"
       exit 0
       ;;
     *) DIR="$1"; shift ;;
@@ -88,7 +88,12 @@ PY
   fi
 
   echo "Importing: $title ($f)"
-  if bash "$IMPORT" "$f" --category "$CATEGORY"; then
+  if [[ -n "$CATEGORY" ]]; then
+    import_cmd=(bash "$IMPORT" "$f" --category "$CATEGORY")
+  else
+    import_cmd=(bash "$IMPORT" "$f")
+  fi
+  if "${import_cmd[@]}"; then
     imported=$((imported + 1))
     sleep 0.5
   else

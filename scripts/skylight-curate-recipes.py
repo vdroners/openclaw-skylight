@@ -14,6 +14,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
 from skylight_recipe_lib import (  # noqa: E402
+    BB_SNAPSHOT,
     category_for_bb_file,
     delete_recipe,
     extract_sidekick_from_markdown,
@@ -25,8 +26,6 @@ from skylight_recipe_lib import (  # noqa: E402
     update_recipe,
 )
 
-BB_SNAPSHOT = Path.home() / ".cursor/snapshots/skylight-bb-pdc20-recipes"
-
 DELETE_TITLES = {
     "Sourdough Bread for Zojirushi",  # superseded by bb-pdc20 sourdough set
     "Easy Fluffy Pancakes",  # merged into Pancakes
@@ -37,6 +36,11 @@ RENAME = {
     "Chick-fil-A Crispy Chicken Sandwich Copycat": "Crispy Chicken Sandwich",
     "The Best Chocolate Chip Cookie Recipe Ever": "Chocolate Chip Cookies",
     "Best Homemade Brownies": "Homemade Brownies",
+    "OATMEAL YOGURT PANCAKES WITH BLACKBERRY CRUSH": "Oatmeal Yogurt Pancakes with Blackberry Crush",
+    "Easy Black Bean Chicken Soup (One Pot, High Protein)": "Black Bean Chicken Soup",
+    "Easy Homemade Biscuits": "Homemade Biscuits",
+    "Brownies - Homemade": "Homemade Brownies",
+    "Avocado Vegi Roll": "Avocado Veggie Roll",
 }
 
 
@@ -62,11 +66,57 @@ def merge_pancakes(recipes: list[dict]) -> tuple[str | None, str | None]:
     return basic["id"], merged
 
 
+def dedupe_by_title(
+    recipes: list[dict],
+    bb_titles: set[str],
+    *,
+    frame_id: str,
+    auth: str,
+    api_url: str,
+    dry_run: bool,
+) -> int:
+    from collections import defaultdict
+
+    by_title: dict[str, list[dict]] = defaultdict(list)
+    for r in recipes:
+        title = (r.get("attributes") or {}).get("summary") or ""
+        if title:
+            by_title[title].append(r)
+
+    deleted = 0
+    for title, group in sorted(by_title.items()):
+        if len(group) < 2:
+            continue
+
+        def keep_score(r: dict) -> tuple:
+            in_bb = title in bb_titles
+            rid = str(r.get("id") or "0")
+            try:
+                num = int(rid)
+            except ValueError:
+                num = 0
+            return (in_bb, num)
+
+        group.sort(key=keep_score, reverse=True)
+        keep = group[0]
+        for dup in group[1:]:
+            dup_id = dup["id"]
+            if dry_run:
+                print(f"DRY DEDUPE delete {title!r} id={dup_id} (keep {keep['id']})")
+            else:
+                delete_recipe(frame_id, auth, api_url, str(dup_id))
+                print(f"DEDUPED delete {title!r} id={dup_id} (keep {keep['id']})")
+                time.sleep(0.3)
+            deleted += 1
+    return deleted
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--bb-only", action="store_true")
     ap.add_argument("--household-only", action="store_true")
+    ap.add_argument("--dedupe-only", action="store_true", help="Remove duplicate recipe titles only")
     ap.add_argument("--snapshot", type=Path, default=BB_SNAPSHOT)
     args = ap.parse_args()
 
@@ -74,14 +124,33 @@ def main() -> int:
     auth = os.environ["SKYLIGHT_AUTHORIZATION"]
     api_url = os.environ.get("SKYLIGHT_API_URL", "https://app.ourskylight.com/api")
 
-    cats = list_categories(frame_id)
     bb_index = load_bb_index(args.snapshot)
     bb_titles = set(bb_index)
     recipes = list_recipes(frame_id)
 
+    if args.dedupe_only:
+        deleted = dedupe_by_title(
+            recipes,
+            bb_titles,
+            frame_id=frame_id,
+            auth=auth,
+            api_url=api_url,
+            dry_run=args.dry_run,
+        )
+        print(f"DEDUPE_DONE deleted={deleted} dry={args.dry_run}")
+        return 0
+
+    cats = list_categories(frame_id)
+
     updated = 0
     deleted = 0
     skipped = 0
+
+    # Titles already present on the frame (for rename-collision deletes)
+    existing_titles = {
+        (r.get("attributes") or {}).get("summary") or ""
+        for r in recipes
+    }
 
     # Pancakes merge (before delete pass)
     keep_id, merged_body = merge_pancakes(recipes)
@@ -115,6 +184,22 @@ def main() -> int:
             continue
 
         new_title = RENAME.get(title, title)
+
+        # Rename would collide with an existing recipe → drop the old title instead
+        if (
+            not args.bb_only
+            and new_title != title
+            and new_title in existing_titles
+            and title not in bb_titles
+        ):
+            if args.dry_run:
+                print(f"DRY DELETE {title!r} id={rid} (rename collides with {new_title!r})")
+            else:
+                delete_recipe(frame_id, auth, api_url, rid)
+                print(f"DELETED {title!r} id={rid} (kept existing {new_title!r})")
+                deleted += 1
+                time.sleep(0.3)
+            continue
 
         if title in bb_titles and not args.household_only:
             path = bb_index[title]

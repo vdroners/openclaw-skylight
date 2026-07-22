@@ -1,0 +1,13 @@
+[Unit]
+Description=Forge Webhook Relay for Alfred Talk
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=-/home/vdroners/.openclaw/.env
+ExecStart=/usr/bin/python3 /home/vdroners/.openclaw/forge-webhook-relay.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -78,6 +78,10 @@ Household aggregator calls `mail-gates.sh --check` unless `--skip-mail` is passe
 
 Integrated in `openclaw-ai-gates.sh` as **TR-ALL**.
 
+## Forge gates (`forge-gates.sh --check`)
+
+See [FORGE-INTEGRATION.md](FORGE-INTEGRATION.md) and [plans/forge_alfred_talk_integration.md](plans/forge_alfred_talk_integration.md). Aggregated as **FORGE-ALL** in `openclaw-ai-gates.sh` when `FORGE_ENABLED=1`.
+
 ## Chore gates
 
 | Script | Purpose |

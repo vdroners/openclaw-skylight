@@ -30,7 +30,12 @@ import json, os, subprocess, sys
 from pathlib import Path
 
 sys.path.insert(0, sys.argv[4])
-from skylight_recipe_lib import extract_sidekick_from_markdown, parse_title
+from skylight_recipe_lib import (
+    extract_sidekick_from_markdown,
+    machine_line_ok,
+    parse_title,
+    prep_type_from_markdown,
+)
 
 def parse_recipe(path: Path):
     text = path.read_text(encoding="utf-8")
@@ -38,21 +43,23 @@ def parse_recipe(path: Path):
     block = "## Sidekick import" in text
     description = extract_sidekick_from_markdown(text, title=summary)
     source = "sidekick_block" if block else "body_fallback"
+    prep_type = prep_type_from_markdown(text)
     ingredient_lines = [
         ln.strip() for ln in description.splitlines()
         if ln.strip().startswith("- ") or __import__("re").match(r"^\d+\.", ln.strip())
     ]
-    return summary, description, source, ingredient_lines
+    return summary, description, source, ingredient_lines, prep_type
 
 mode = sys.argv[1]
 if mode == "dry-run":
     path = Path(sys.argv[2])
     if not path.is_file():
         raise SystemExit(f"Missing file: {path}")
-    summary, desc, source, ing = parse_recipe(path)
+    summary, desc, source, ing, prep_type = parse_recipe(path)
     has_table = "|" in desc
     ok = len(desc) >= 200 and source == "sidekick_block" and not has_table
     print(f"title={summary!r}")
+    print(f"prep_type={prep_type}")
     print(f"source={source}")
     print(f"description_len={len(desc)}")
     print(f"has_markdown_table={has_table}")
@@ -81,9 +88,12 @@ if mode == "check":
         print(f"P12-3: WARN — {len(matches)} recipes titled {title!r}")
     rid = matches[0]["id"]
     body = (matches[0].get("attributes") or {}).get("description") or ""
+    prep_type = "hand-oven" if "not used for this recipe" in body.lower() else "bread-machine"
+    if "Course:" not in body and "Oven:" in body:
+        prep_type = "hand-oven"
     checks = {
         "has_ingredients": "Ingredients" in body or body.strip().startswith("- "),
-        "has_course": "Course:" in body,
+        "has_machine_or_oven": machine_line_ok(body, prep_type),
         "no_boilerplate": "Copy everything below" not in body,
         "no_table_pipes": "|" not in body,
         "min_length": len(body) >= 200,
