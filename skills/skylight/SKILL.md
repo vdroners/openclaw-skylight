@@ -129,21 +129,7 @@ skylight meals createRecipe --frame-id "$FID" \
   --category-id "$(skylight meals listCategories --frame-id "$FID" --json | jq -r '.data[] | select(.attributes.label=="Snack") | .id')"
 ```
 
-Bulk import from markdown snapshot (bb-pdc20 sections `01-white` … `16-web-adaptations`):
-
-```bash
-# All web adaptations (6 recipes) + curate manifest bodies on Skylight
-bash ~/.openclaw/scripts/skylight-sync-web-recipes.sh
-
-# Single section or full snapshot
-bash ~/.openclaw/scripts/skylight-import-recipes-batch.sh \
-  ~/.cursor/snapshots/skylight-bb-pdc20-recipes/16-web-adaptations
-
-# One recipe (category auto from section folder, or override)
-bash ~/.openclaw/scripts/skylight-import-recipes.sh <recipe.md> [--category Snack]
-```
-
-Recipe library: `~/.cursor/snapshots/skylight-bb-pdc20-recipes/` (61 recipes: factory book + **16-web-adaptations**). Web section includes machine courses (WHITE, CAKE) and one manual oven recipe (Copeland biscuits).
+Bulk import from markdown: `bash ~/.openclaw/scripts/skylight-import-recipes.sh <recipe.md> [--category Snack]`
 
 **Do not** auto-add recipe ingredients to the grocery list.
 
@@ -171,31 +157,8 @@ bash ~/.openclaw/scripts/skylight-audit-weekly.sh       # Sunday cron: diff + Fa
 bash ~/.openclaw/scripts/skylight-cleanup-apply.sh --dry-run B2 B3 B5
 bash ~/.openclaw/scripts/skylight-family-morning-post.sh  # digest v2 + Talk (Family Hub)
 bash ~/.openclaw/scripts/skylight-import-recipes-verify.sh --dry-run <recipe.md>
-bash ~/.openclaw/scripts/skylight-recipe-gates.sh --check --web-only   # P12 web section
-bash ~/.openclaw/scripts/skylight-recipe-gates.sh --check-full         # all 61 manifest titles
-bash ~/.openclaw/scripts/skylight-sync-web-recipes.sh                  # import 16 + curate BB
-bash ~/.openclaw/scripts/skylight-sync-all-bb-recipes.sh               # full snapshot import
-bash ~/.openclaw/scripts/skylight-recipe-lookup.sh "banana"            # CLI lookup
-bash ~/.openclaw/scripts/skylight-meal-plan-propose.sh --dry-run       # weekly dinner plan
-bash ~/.openclaw/scripts/skylight-recipe-dedupe.sh --dry-run           # duplicate title cleanup
 bash ~/.openclaw/scripts/skylight-auth-refresh.sh         # re-login if smoke fails
 ```
-
-### Family Hub recipe Talk (SKY-30 / SKY-31 — no LLM)
-
-Deterministic fast-path before gateway (see `docs/NEXTCLOUD-TALK.md`):
-
-| Command | Action |
-|---------|--------|
-| `@alfred recipe banana` | Fuzzy match snapshot + course/crust times |
-| `@alfred recipe list web` | Titles in section `16-web-adaptations` |
-| `@alfred bread courses` | BB-PDC20 course reference summary |
-| `@alfred bread start lavender-thyme medium` | Start timer + completion Talk nudge |
-| `@alfred meal plan` | Post weekly dinner proposal card |
-| `@alfred chores` | List today’s open chores |
-| `@alfred done <name>` | Mark matching open chore complete |
-
-Exec equivalents: `skylight-recipe-lookup.sh`, `skylight-bread-timer.sh start …`, `skylight-chore-talk-fast-path.sh`
 
 **Automation matrix:** `~/.openclaw/docs/OPENCLAW-AUTOMATION-CAPABILITIES.md`
 
@@ -214,7 +177,7 @@ Room **``** only. **Never silent-write** calendar/chores/lists from chat until o
 
 ### Mandatory first step (Family Hub room)
 
-When the incoming message matches `@openclaw (YES|NO|EDIT) (enrich-calendar-*|enrich-chore-*|ask-*|meal-plan-*)`, **exec dispatch before any other tool or LLM improvisation**:
+When the incoming message matches `@openclaw (YES|NO|EDIT) (enrich-calendar-*|enrich-chore-*|ask-*)`, **exec dispatch before any other tool or LLM improvisation**:
 
 ```bash
 bash ~/.openclaw/scripts/skylight-family-hub-dispatch.sh "<exact user message>"
@@ -229,7 +192,6 @@ Wire via OpenClaw Talk webhook or agent pre-tool hook pointing at the script abo
 | Intent | Action |
 |--------|--------|
 | `@openclaw YES enrich-chore-023` | dispatch → reply-handler → apply + confirmation post |
-| `@openclaw YES meal-plan-2026-w23` | dispatch → apply `createSitting` per approved row |
 | `@openclaw NO enrich-chore-024` | dispatch → rejected + confirmation post |
 | `@openclaw EDIT ask-003 …` | dispatch → edit noted + confirmation post |
 | "add milk to grocery" | Propose list item card (C1 — no direct write) |

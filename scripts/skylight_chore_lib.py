@@ -208,20 +208,47 @@ def apply_chore_update(
     fields: dict[str, Any],
     cur: dict[str, Any],
 ) -> None:
-    target_time = fields.get("start_time") or "20:00"
-    routine = bool(fields.get("routine"))
-    bh, _slot = allowed_byhour(target_time)
+    """PUT a chore series. Optional fields: summary, start_time, routine,
+    reward_points, recurrence_set (list[str] or single RRULE string),
+    description.
+    """
     a = cur.get("attributes") or {}
+    target_time = fields.get("start_time") or a.get("start_time") or "20:00"
+    if "routine" in fields:
+        routine = bool(fields.get("routine"))
+    else:
+        routine = bool(a.get("routine"))
+    bh, _slot = allowed_byhour(target_time)
     rel = (cur.get("relationships") or {}).get("category") or {}
     cat_id = (rel.get("data") or {}).get("id")
-    body = {
-        "summary": a.get("summary"),
-        "reward_points": fields.get("reward_points", a.get("reward_points") or 1),
+
+    if "recurrence_set" in fields:
+        rset = fields["recurrence_set"]
+        if isinstance(rset, str):
+            rset = [rset]
+        recurrence = sync_rrule(list(rset or []), bh, routine)
+    else:
+        recurrence = sync_rrule(a.get("recurrence_set"), bh, routine)
+
+    if "reward_points" in fields:
+        pts = fields["reward_points"]
+    else:
+        pts = a.get("reward_points")
+        if pts is None:
+            pts = 1
+
+    body: dict[str, Any] = {
+        "summary": fields.get("summary", a.get("summary")),
+        "reward_points": pts,
         "routine": routine,
-        "recurrence_set": sync_rrule(a.get("recurrence_set"), bh, routine),
+        "recurrence_set": recurrence,
         "start": a.get("start"),
         "category_id": cat_id,
     }
+    if "description" in fields:
+        body["description"] = fields["description"]
+    elif a.get("description") is not None:
+        body["description"] = a.get("description")
     if not routine:
         body["start_time"] = target_time
 
@@ -239,6 +266,92 @@ def apply_chore_update(
     with urllib.request.urlopen(req, timeout=30) as resp:
         if resp.status != 200:
             raise RuntimeError(f"PUT chores/{group_id} -> HTTP {resp.status}")
+
+
+def create_chore_series(
+    frame_id: str,
+    category_id: str,
+    summary: str,
+    *,
+    recurrence_set: str,
+    start_time: str | None = None,
+    routine: bool = False,
+    reward_points: int = 1,
+    description: str | None = None,
+    start: str | None = None,
+    auth: str | None = None,
+    api_url: str | None = None,
+) -> str:
+    """Create a chore series via CLI; optionally PUT description. Returns group_id."""
+    start = start or date.today().isoformat()
+    cmd = [
+        "skylight", "chores", "createChore",
+        "--frame-id", frame_id,
+        "--category-ids", str(category_id),
+        "--summary", summary,
+        "--recurrence-set", recurrence_set,
+        "--reward-points", str(reward_points),
+        "--start", start,
+        "--json",
+    ]
+    if start_time:
+        cmd.extend(["--start-time", start_time])
+    # Skylight createChore often 500s with --routine; create plain then PUT routine.
+    out = subprocess.check_output(cmd, text=True)
+    data = json.loads(out)
+    # Response may be {data: [...]} or a single object
+    items = data.get("data") if isinstance(data, dict) else data
+    if isinstance(items, dict):
+        items = [items]
+    if not items:
+        raise RuntimeError(f"createChore empty response for {summary!r}: {out[:300]}")
+    first = items[0]
+    a = first.get("attributes") or first
+    group_id = str(a.get("group") or a.get("id") or first.get("id") or "")
+    group_id = group_id.split("-")[0]
+    if not group_id:
+        raise RuntimeError(f"createChore missing id for {summary!r}: {out[:300]}")
+
+    if auth and api_url and (description or routine or start_time):
+        # Re-fetch series row shape for PUT (routine often cannot be set at create)
+        end = (date.today() + timedelta(days=14)).isoformat()
+        listed = json.loads(
+            subprocess.check_output(
+                [
+                    "skylight", "chores", "listChores",
+                    "--frame-id", frame_id,
+                    "--after", start,
+                    "--before", end,
+                    "--json",
+                ],
+                text=True,
+            )
+        )
+        cur = find_series_chore(listed, group_id)
+        if cur is None:
+            # Fall back to created object wrapped as API row
+            cur = first if "attributes" in first else {"id": group_id, "attributes": a, "relationships": {
+                "category": {"data": {"id": str(category_id)}}
+            }}
+        fields: dict[str, Any] = {
+            "summary": summary,
+            "routine": routine,
+            "reward_points": reward_points,
+            "recurrence_set": [recurrence_set],
+        }
+        if start_time:
+            fields["start_time"] = start_time
+        if description:
+            fields["description"] = description
+        apply_chore_update(
+            frame_id,
+            auth,
+            api_url,
+            group_id,
+            fields,
+            cur,
+        )
+    return group_id
 
 
 def find_series_chore(chores_json: dict, group_id: str) -> dict | None:

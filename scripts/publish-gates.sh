@@ -38,6 +38,10 @@ done
 for f in scripts/*.py; do
   python3 -m py_compile "$f" || fail S4 "$f python syntax error"
 done
+for f in scripts/lib/*.py; do
+  [[ -f "$f" ]] || continue
+  python3 -m py_compile "$f" || fail S4 "$f python syntax error"
+done
 pass S4 "all scripts pass bash -n and python compile"
 
 # S5-S6 covered by scrub

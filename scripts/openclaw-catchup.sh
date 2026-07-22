@@ -88,7 +88,7 @@ if [[ "$MORNING" -eq 1 ]]; then
 
   step "Self watchdog" run_cron_job \
     c924d4ec-a108-475b-9a0e-bd6f8db87b23 openclaw-self-watchdog \
-    "${SCRIPT_DIR}/openclaw-self-watchdog-post.sh" watchdog
+    "${SCRIPT_DIR}/alfred-self-watchdog-post.sh" watchdog
 fi
 
 if [[ "$HOUSEHOLD" -eq 1 ]]; then

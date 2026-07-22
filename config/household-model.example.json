@@ -26,12 +26,17 @@
     "monthly": 2
   },
   "chore_time_defaults": {
-    "dishes": ["20:00", true],
+    "put away clean dishes": ["06:00", true],
+    "dishes": ["06:00", true],
     "clean room": ["20:00", true],
     "brush teeth": ["20:00", true],
     "feed/water cats": ["06:00", true],
     "kitchen counters": ["20:00", true],
+    "start dishwasher": ["20:00", true],
     "take out trash": ["07:00", false],
+    "empty litter": ["10:00", false],
+    "deep clean litter": ["10:00", false],
+    "clean fridge": ["10:00", false],
     "mop": ["10:00", false],
     "toilet": ["10:00", false],
     "vacuum": ["10:00", false],
@@ -39,7 +44,7 @@
     "run": ["10:00", false]
   },
   "chore_schedule_notes": {
-    "Alex": "Evening block 20:00 for daily routines; periodic chores at 10:00.",
+    "Alex": "Morning unload dishes 06:00; evening block 20:00; periodic deep chores 10:00 (2 pts).",
     "Parent": "Monthly deep chores at 10:00, 2 pts each."
   },
   "parent_chore_dedupe": {

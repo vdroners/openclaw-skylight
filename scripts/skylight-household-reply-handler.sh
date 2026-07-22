@@ -33,10 +33,23 @@ batch_path = Path(os.environ["BATCH"])
 room = os.environ["ROOM"]
 script_dir = os.environ["SCRIPT_DIR"]
 dry = int(os.environ.get("DRY", "0"))
-agent = os.environ.get("OPENCLAW_AGENT_NAME", "openclaw")
+agent = os.environ.get("OPENCLAW_AGENT_MENTION", "@alfred").lstrip("@") or "alfred"
+
+def post_talk_error(text):
+    if dry:
+        print(f"DRY-RUN error: {text}")
+        return
+    if not room:
+        print(f"ERROR: {text} (SKYLIGHT_FAMILY_TALK_ROOM not set)", file=sys.stderr)
+        return
+    subprocess.run(
+        ["bash", f"{script_dir}/talk-post.sh", text, room],
+        capture_output=True, text=True,
+    )
 
 m = re.search(
-    rf"@{re.escape(agent)}\s+(YES|NO|EDIT)\s+(enrich-calendar-\d+|enrich-chore-\d+|ask-\d+)(?:\s+(.*))?",
+    rf"@{re.escape(agent)}\s+(YES|NO|EDIT)\s+"
+    r"(enrich-calendar-\d+|enrich-chore-\d+|ask-\d+|meal-plan-\d+-w\d+)(?:\s+(.*))?",
     msg, re.I,
 )
 if not m:
@@ -45,12 +58,18 @@ if not m:
 
 action, pid, extra = m.group(1).upper(), m.group(2), (m.group(3) or "").strip()
 if not batch_path.is_file():
+    post_talk_error(
+        f"No proposal batch loaded — check the morning digest for current IDs."
+    )
     print(f"No batch file for {pid}", file=sys.stderr)
     sys.exit(1)
 
 batch = json.loads(batch_path.read_text())
 prop = next((p for p in batch.get("proposals", []) if p["id"] == pid), None)
 if not prop:
+    post_talk_error(
+        f"Unknown proposal {pid} — check the morning digest for current IDs."
+    )
     print(f"Unknown proposal {pid} in batch", file=sys.stderr)
     sys.exit(1)
 

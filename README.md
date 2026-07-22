@@ -256,6 +256,19 @@ Operator guide: [docs/HOUSEHOLD-ENRICHMENT.md](docs/HOUSEHOLD-ENRICHMENT.md).
 
 ---
 
+## BB-PDC20 recipe library (Skylight / Sidekick)
+
+61 recipes in `~/.cursor/snapshots/skylight-bb-pdc20-recipes/` — factory Zojirushi book (sections 01–15) plus **web adaptations** (section 16: lavender/thyme, banana bread, shokupan, biscuits, etc.).
+
+```bash
+make recipes-web-sync    # import 16-web-adaptations + curate manifest on Skylight
+make recipes-gates       # P12 parse + Skylight presence checks
+```
+
+Full operator guide: [docs/SKYLIGHT-RECIPES.md](docs/SKYLIGHT-RECIPES.md).
+
+---
+
 ## Week-2 capacity (Talk lane relief)
 
 **v0.2.2** addresses OpenClaw gateway starvation when fleet `agentTurn` cron runs every 10–20 minutes alongside Talk.

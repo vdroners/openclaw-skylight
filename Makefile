@@ -1,4 +1,4 @@
-.PHONY: install gates scrub publish smoke household-gates mail-gates talk-gates ai-gates day-review shell-cron
+.PHONY: install gates scrub publish smoke household-gates mail-gates talk-gates ai-gates day-review shell-cron recipes-gates recipes-web-sync recipes-full-sync
 
 OPENCLAW_DIR ?= $(HOME)/.openclaw
 
@@ -41,3 +41,12 @@ chore-fill-dry:
 
 chore-dedupe-dry:
 	bash scripts/skylight-chores-dedupe-parent.sh --dry-run
+
+recipes-gates:
+	bash scripts/skylight-recipe-gates.sh --check --web-only
+
+recipes-web-sync:
+	bash scripts/skylight-sync-web-recipes.sh
+
+recipes-full-sync:
+	bash scripts/skylight-sync-all-bb-recipes.sh

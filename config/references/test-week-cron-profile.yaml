@@ -3,7 +3,7 @@
 # Restore: bash scripts/restore-cron-profile.sh
 
 version: 1
-updated: 2026-07-05
+updated: 2026-05-31
 description: Week-2 capacity relief — reversible disable list
 
 disable:
@@ -33,16 +33,8 @@ keep_enabled:
   - nc-gcs-api-sweep
   - nc-gcs-flight-test
   - nc-gcs-full-qa
-  - gh-issues-weekly-triage
-
-extra_disable:
-  - infra-health-check
-  - alfred-phase4-routing-check
-  - weekly-system-rundown
-  - nc-gcs-adsb-stack
-  - nc-gcs-exports-verify
-  - nc-gcs-flight-review
   - daily-flight-briefing
-  - nc-gcs-regression
-  - nc-app-update-check
+  - gh-issues-weekly-triage
   - monthly-ops-review
+  - infra-health-check
+  - nc-app-update-check

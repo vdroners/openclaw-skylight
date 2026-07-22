@@ -4,18 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### Fixed
-
-- **Alfred SITL / flight-triage Path B:** `@alfred` YES/NO dispatch (exit 2 non-match), YES→intake, propose talk-post arg order, `NEXTCLOUD_*`→`NC_*` scan aliases, flight-event-monitor ARG_MAX via temp files, `load-agent-env` default `@alfred`
-- Daily QA flight-cycle schema drift (now versioned under nc-gcs `scripts/qa/`)
-
 ### Added
 
-- `openclaw-flight-triage-gates.sh` G-ALF-03c/06/08 + G-FEM-*; FT-ALL wired into `openclaw-ai-gates.sh`; CAP-F1b ARG_MAX journal check; `gate-path-a-triage-talk.sh`
-- `alfred-flight-triage-gates.sh` aggregator; `run-qa-flight-test-cron.sh` (G-QA-CRON-EXIT)
-
-### Added (prior capabilities)
-
+- **Household chore expansion (2026-07-20):** Dan dishwasher + litter dump/deep + fridge/drawers/stove-oven; Phoebe unload dishes / Mon bathroom; Done-when checklists; `skylight-chore-expansion-apply.py`; `skylight_chore_lib.create_chore_series` (post-create PUT for routine — createChore `--routine` 500s)
 - **Alfred New Capabilities:** Family Hub shim fast-paths (help, recipe, meal-plan propose, chores/done), weekly `skylight-meal-plan` shell cron, flight-triage scan timer + Ops YES/NO dispatch
 - `scripts/skylight-chore-talk-fast-path.sh` + `lib/chore_talk_match.py` — `@alfred chores` / `@alfred done …`
 - `scripts/skylight-meal-plan-talk-fast-path.sh` — `@alfred meal plan`
@@ -24,6 +15,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- `docs/plans/skylight_chore_organization.md` + `household-model.example.json` — expanded Dan/Phoebe target board and time defaults
+- `skylight_chore_lib.apply_chore_update` — supports summary / description / recurrence overrides
 - **Recipe Sidekick cleanup:** household title/body polish (Title Case, Ingredients/Instructions, marketing renames); Tomato Sauce hand-mix Sidekick (no false Course 11)
 - `skylight_recipe_lib.py` — `title_case_recipe`, stronger `normalize_household_description` (ALL-CAPS dumps, Directions→Instructions)
 - `skylight-curate-recipes.py` — RENAME map for oatmeal pancakes, black bean soup, biscuits, brownies, avocado veggie roll

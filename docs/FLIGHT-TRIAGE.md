@@ -4,35 +4,23 @@
 
 | Script | Role |
 |--------|------|
-| `flight-triage-scan.sh` | Detect `.bin` under Flight Recordings (DAV PROPFIND) |
-| `flight-triage-shell.sh` | Scan → propose newest unseen BIN (shell-direct cron) |
-| `flight-triage-propose.sh` | Post Talk card with `@alfred YES triage-<id>` |
-| `flight-triage-dispatch.sh` | Parse YES/NO → intake or reject |
+| `flight-triage-scan.sh` | Detect new `.bin` under Flight Recordings (DAV PROPFIND) |
+| `flight-triage-propose.sh` | Post Talk card with `@openclaw YES triage-<id>` |
+| `flight-triage-dispatch.sh` | Parse YES/NO |
 | `flight-triage-intake.sh` | Collect intake fields, POST `/api/jobs` |
 | `openclaw-flight-triage-gates.sh` | Dry-run gates |
 
 ## Env
 
-- `NC_URL` / Nextcloud credentials via `load-nextcloud-env.sh`
-- `FLIGHT_TRIAGE_TALK_ROOM` — optional; defaults to `SKYLIGHT_OPS_TALK_ROOM`
-- `OPENCLAW_AGENT_MENTION` — `@alfred`
+- `NC_URL` — Nextcloud base URL
+- `NC_AT_PUBLISH_TOKEN` or operator app password
+- `FLIGHT_TRIAGE_TALK_ROOM` — Talk room token (ops)
 
-## Cron (shell-direct)
-
-Sunday-independent daytime scan:
+## Cron
 
 ```bash
-# Installed from config/references/cron-shell-direct.yaml
-# alfred-cron-flight-triage-scan.timer — */30 8-18 America/Los_Angeles
-OPENCLAW_SKYLIGHT_ROOT=/media/4TB/openclaw-skylight \
-  python3 scripts/install-openclaw-shell-cron.sh
+# In openclaw-catchup.sh optional path:
+bash scripts/flight-triage-scan.sh && bash scripts/flight-triage-propose.sh
 ```
 
-## Ops Talk
-
-Relay `:8789` fast-path:
-
-```text
-@alfred YES triage-123456
-@alfred NO triage-123456
-```
+Wire Talk webhook to `flight-triage-dispatch.sh` in `~/.openclaw/openclaw.json`.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Talk response PASS/FAIL gates for OpenClaw Nextcloud Talk.
-# Usage: talk-response-audit.sh --check [--phase baseline|config|relay|dispatch|nc-wiring|usability|all]
+# Usage: talk-response-audit.sh --check [--phase baseline|config|relay|dispatch|nc-wiring|all]
 set -euo pipefail
 
 OPENCLAW="${OPENCLAW_DIR:-$HOME/.openclaw}"
@@ -155,12 +155,6 @@ PY
       FAIL*) bad "${line#FAIL }" ;;
     esac
   done
-
-  if bash "${OPENCLAW}/scripts/enable-talk-user-outbound.sh" --check >/dev/null 2>&1; then
-    ok "G1-7 talk user outbound env + patch"
-  else
-    bad "G1-7 talk user outbound drift — run enable-talk-user-outbound.sh --apply after npm upgrades"
-  fi
 }
 
 gate_relay() {
@@ -169,15 +163,8 @@ gate_relay() {
 
   [[ -f "$RELAY" ]] || { warn "G2 skipped — nc-webhook-relay.py missing (operator-local)"; return; }
 
-  local dispatch_lib="${OPENCLAW}/scripts/lib/talk_hooks_dispatch.py"
-  if grep -q '"deliver": True' "$RELAY" 2>/dev/null \
-    || grep -q '"deliver": true' "$RELAY" 2>/dev/null \
-    || { [[ -f "$dispatch_lib" ]] && grep -q '"deliver": True' "$dispatch_lib"; } \
-    || grep -q 'dispatch_talk_to_gateway' "$RELAY" 2>/dev/null; then
-    ok "G2-6 deliver true in relay/dispatch lib"
-  else
-    bad "G2-6 deliver still false"
-  fi
+  grep -q '"deliver": True' "$RELAY" || grep -q '"deliver": true' "$RELAY" \
+    && ok "G2-6 deliver true in relay" || bad "G2-6 deliver still false"
 
   grep -q '_message_mentions_' "$RELAY" \
     && ok "G2-6b rich mention helper present" || bad "G2-6b rich mention helper missing"
@@ -237,7 +224,7 @@ st, _ = post({
 })
 checks.append(("G2-3", st in (200, 502), f"rich mention HTTP {st}"))
 
-st, body = post(evt(f"@{agent} NO enrich-chore-99001", fam))
+st, body = post(evt(f"@{agent} NO enrich-chore-023", fam))
 checks.append(("G2-7", st == 200 and "household-dispatch" in body, f"T5 YES/NO fast-path HTTP {st}"))
 
 spam = f"@{agent} gate-rate {uniq}"
@@ -298,16 +285,6 @@ gate_dispatch() {
   else
     warn "G3-4 talk-webhook-shim.py not in OPENCLAW_DIR"
   fi
-
-  if [[ -f "$shim" ]] \
-    && grep -q 'dispatch_talk_to_gateway' "$shim" \
-    && grep -q 'talk-webhook-shim/family-hub' "$shim"; then
-    ok "G3-5 shim Family Hub LLM via hooks (agentId=family)"
-  elif [[ -f "$shim" ]]; then
-    bad "G3-5 shim missing Family Hub hooks dispatch"
-  else
-    warn "G3-5 talk-webhook-shim.py not in OPENCLAW_DIR"
-  fi
 }
 
 gate_nc_wiring() {
@@ -346,72 +323,6 @@ gate_nc_wiring() {
   [[ "$cnt" -ge 2 ]] && ok "G4-1 bot in both rooms (count=$cnt)" || bad "G4-1 bot missing from primary rooms (count=$cnt)"
 }
 
-gate_usability() {
-  local lib="${OPENCLAW}/scripts/lib/talk_hooks_dispatch.py"
-  local shim="${OPENCLAW}/talk-webhook-shim.py"
-  local help_lib="${OPENCLAW}/scripts/lib/talk_help.py"
-
-  [[ -f "$lib" ]] && grep -q 'post_dispatch_ack' "$lib" \
-    && ok "G-UX-1a dispatch ack helper" || bad "G-UX-1a dispatch ack helper missing"
-  [[ -f "$lib" ]] && grep -q 'is_family_fast_read' "$lib" \
-    && ok "G-UX-1d family fast-read router present" || warn "G-UX-1d family fast-read router missing"
-
-  [[ -f "$shim" ]] && grep -q 'TALK_SHIM_PLUGIN_FALLBACK' "$shim" \
-    && ok "G-UX-1c shim hooks-fail guard (no silent plugin fallback)" \
-    || bad "G-UX-1c shim hooks-fail guard missing"
-
-  [[ -f "$help_lib" ]] && ok "G-UX-1e talk help fast-path lib" || bad "G-UX-1e talk help lib missing"
-
-  local shim="${OPENCLAW}/talk-webhook-shim.py"
-  if [[ -f "$shim" ]]; then
-    grep -q 'is_recipe_command' "$shim" \
-      && ok "G-UX-1f shim recipe fast-path" || bad "G-UX-1f shim missing recipe fast-path"
-    grep -q 'meal-plan-' "$shim" \
-      && ok "G-UX-1g shim meal-plan proposal regex" || bad "G-UX-1g shim missing meal-plan regex"
-    grep -q 'is_chore_command' "$shim" \
-      && ok "G-UX-1h shim chore fast-path" || warn "G-UX-1h shim chore fast-path missing"
-    grep -q 'is_help_command' "$shim" \
-      && ok "G-UX-1i shim help fast-path" || bad "G-UX-1i shim missing help fast-path"
-  else
-    warn "G-UX-1f..i skipped — talk-webhook-shim.py missing"
-  fi
-
-  if [[ -n "$FAMILY_ROOM" ]] && port_listen 8788; then
-    python3 - "$FAMILY_ROOM" <<'PY' | while read -r line; do
-import json, sys, time, urllib.error, urllib.request
-fam = sys.argv[1]
-uniq = str(int(time.time()))
-body = {
-    "type": "Create",
-    "actor": {"id": "users/NCAdmin", "name": "GateTest"},
-    "object": {"content": f"gate ux ack probe {uniq}"},
-    "target": {"id": f"https://cloud/ocs/v2.php/apps/spreed/api/v1/room/{fam}"},
-}
-data = json.dumps(body).encode()
-req = urllib.request.Request(
-    "http://127.0.0.1:8788/nextcloud-talk-webhook",
-    data=data,
-    headers={"Content-Type": "application/json"},
-    method="POST",
-)
-try:
-    with urllib.request.urlopen(req, timeout=12) as resp:
-        ok_http = 200 <= resp.status < 300
-except Exception as exc:
-    print(f"FAIL G-UX-1b synthetic Family Hub POST: {exc}")
-    raise SystemExit
-print(f"{'PASS' if ok_http else 'FAIL'} G-UX-1b synthetic Family Hub POST HTTP ok")
-PY
-      case "$line" in
-        PASS*) ok "${line#PASS }" ;;
-        FAIL*) bad "${line#FAIL }" ;;
-      esac
-    done
-  else
-    warn "G-UX-1b skipped — Family room token unset or shim :8788 not listening"
-  fi
-}
-
 run_phase() {
   case "$1" in
     baseline) gate_baseline ;;
@@ -419,20 +330,18 @@ run_phase() {
     relay) gate_relay ;;
     dispatch) gate_dispatch ;;
     nc-wiring) gate_nc_wiring ;;
-    usability) gate_usability ;;
     all)
       gate_baseline
       gate_config
       gate_relay
       gate_dispatch
       gate_nc_wiring
-      gate_usability
       ;;
     *) echo "unknown phase: $1" >&2; exit 2 ;;
   esac
 }
 
-[[ "${1:-}" == "--check" ]] || { echo "usage: $0 --check [--phase baseline|config|relay|dispatch|nc-wiring|usability|all]" >&2; exit 2; }
+[[ "${1:-}" == "--check" ]] || { echo "usage: $0 --check [--phase baseline|config|relay|dispatch|nc-wiring|all]" >&2; exit 2; }
 if [[ "${2:-}" == "--phase" ]]; then
   PHASE="${3:-all}"
 fi

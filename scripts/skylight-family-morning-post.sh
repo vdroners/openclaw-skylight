@@ -3,10 +3,28 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/load-skylight-env.sh"
 ROOM="${SKYLIGHT_FAMILY_TALK_ROOM:-}"
 
-bash "${SCRIPT_DIR}/skylight-auth-refresh.sh" >/dev/null 2>&1 || true
-OUT="$(bash "${SCRIPT_DIR}/skylight-family-morning.sh")"
+AUTH_OK=1
+bash "${SCRIPT_DIR}/skylight-auth-refresh.sh" >/dev/null 2>&1 || AUTH_OK=0
+
+if [[ "$AUTH_OK" -ne 1 ]]; then
+  bash "${SCRIPT_DIR}/talk-post.sh" \
+    "Skylight auth expired — operator run skylight-auth-refresh.sh" \
+    "$ROOM" || true
+  echo "SKYLIGHT_FAMILY_BRIEF_AUTH_FAIL room=${ROOM}" >&2
+  exit 1
+fi
+
+if ! OUT="$(bash "${SCRIPT_DIR}/skylight-family-morning.sh" 2>&1)"; then
+  bash "${SCRIPT_DIR}/talk-post.sh" \
+    "Morning digest failed — operator check skylight-family-morning.sh logs." \
+    "$ROOM" || true
+  echo "SKYLIGHT_FAMILY_BRIEF_FAIL room=${ROOM}" >&2
+  exit 1
+fi
 if [[ "${SUBARU_MORNING_BRIEF:-0}" == "1" && -x "${SCRIPT_DIR}/subaru-morning-line.sh" ]]; then
   SUBARU_LINE="$(bash "${SCRIPT_DIR}/subaru-morning-line.sh" 2>/dev/null || true)"
   if [[ -n "$SUBARU_LINE" ]]; then

@@ -7,6 +7,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR}/load-skylight-env.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/load-agent-env.sh"
 
 DRY=0
 MSG=""
@@ -20,7 +22,8 @@ done
 
 [[ -n "$MSG" ]] || { echo "usage: $0 [--dry-run] '<message>'" >&2; exit 1; }
 
-AGENT="${OPENCLAW_AGENT_NAME:-openclaw}"
+AGENT="${OPENCLAW_AGENT_NAME:-${OPENCLAW_AGENT_MENTION#@}}"
+AGENT="${AGENT:-openclaw}"
 if ! printf '%s' "$MSG" | grep -qiE "@${AGENT}[[:space:]]+(YES|NO|EDIT)[[:space:]]+(enrich-calendar-|enrich-chore-|ask-)[0-9]+"; then
   echo "dispatch: not a household proposal command"
   exit 2

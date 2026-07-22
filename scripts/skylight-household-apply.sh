@@ -27,7 +27,7 @@ BATCH="${STATE_DIR}/batch-latest.json"
 mkdir -p "$SNAP_DIR"
 
 python3 <<PY
-import json, os, re, subprocess, sys, urllib.request
+import json, os, re, subprocess, sys, time, urllib.request
 from datetime import datetime
 from pathlib import Path
 
@@ -184,6 +184,34 @@ elif prop["id"].startswith("enrich-calendar"):
                 print(f"FAIL {pid}: {e.code} {err}", file=sys.stderr)
                 alert_ops(f"Household apply FAIL {pid}: HTTP {e.code}")
                 sys.exit(1)
+elif prop["id"].startswith("meal-plan-"):
+    sittings = prop.get("sittings") or []
+    if not sittings:
+        print(f"FAIL {pid}: no sittings in proposal", file=sys.stderr)
+        sys.exit(1)
+    if dry:
+        print(f"DRY: createSitting x{len(sittings)} for {pid}")
+        for s in sittings:
+            print(f"  {s.get('date')} {s.get('meal')}: {s.get('recipe_title')}")
+        sys.exit(0)
+    applied = 0
+    for s in sittings:
+        cmd = [
+            "skylight", "meals", "createSitting",
+            "--frame-id", fid,
+            "--date", s["date"],
+            "--category-id", str(s["category_id"]),
+            "--recipe-id", str(s["recipe_id"]),
+        ]
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        if r.returncode != 0:
+            err = (r.stderr or r.stdout or "createSitting failed")[:200]
+            print(f"FAIL {pid} sitting {s.get('date')}: {err}", file=sys.stderr)
+            alert_ops(f"Meal plan apply FAIL {pid} {s.get('date')}: {err[:80]}")
+            sys.exit(1)
+        applied += 1
+        time.sleep(0.3)
+    print(f"Applied meal plan {pid}: {applied} sittings")
 else:
     print(f"Cannot auto-apply {pid} — use EDIT to create new proposal", file=sys.stderr)
     sys.exit(1)

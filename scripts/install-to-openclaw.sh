@@ -8,7 +8,7 @@ OPENCLAW_DIR="${OPENCLAW_DIR:-$HOME/.openclaw}"
 FORCE=0
 [[ "${1:-}" == "--force" ]] && FORCE=1
 
-mkdir -p "${OPENCLAW_DIR}/scripts" "${OPENCLAW_DIR}/workspace/skills" "${OPENCLAW_DIR}/config" "${OPENCLAW_DIR}/workspace/references"
+mkdir -p "${OPENCLAW_DIR}/scripts" "${OPENCLAW_DIR}/scripts/lib" "${OPENCLAW_DIR}/workspace/skills" "${OPENCLAW_DIR}/config" "${OPENCLAW_DIR}/workspace/references"
 
 link_one() {
   local src="$1" dst="$2"
@@ -59,10 +59,19 @@ for f in "${ROOT}"/scripts/*.py; do
   link_one "$f" "${OPENCLAW_DIR}/scripts/$base"
 done
 
+for f in "${ROOT}"/scripts/lib/*; do
+  [[ -f "$f" ]] || continue
+  base=$(basename "$f")
+  link_one "$f" "${OPENCLAW_DIR}/scripts/lib/$base"
+done
+
 sync_skill "${ROOT}/skills/skylight" "${OPENCLAW_DIR}/workspace/skills/skylight"
 sync_skill "${ROOT}/skills/email-intelligence" "${OPENCLAW_DIR}/workspace/skills/email-intelligence"
 if [[ -d "${ROOT}/skills/flight-triage" ]]; then
   sync_skill "${ROOT}/skills/flight-triage" "${OPENCLAW_DIR}/workspace/skills/flight-triage"
+fi
+if [[ -d "${ROOT}/skills/forge-print" ]]; then
+  sync_skill "${ROOT}/skills/forge-print" "${OPENCLAW_DIR}/workspace/skills/forge-print"
 fi
 
 # Operator mention alias: patch copied skills when OPENCLAW_AGENT_MENTION is set in .env
@@ -91,11 +100,17 @@ for ref in cron-shell-direct.yaml test-week-cron-profile.yaml; do
   fi
 done
 
+for help in talk-help-family.txt talk-help-ops.txt; do
+  link_one "${ROOT}/config/${help}" "${OPENCLAW_DIR}/config/${help}"
+done
+
+link_one "${ROOT}/scripts/talk-webhook-shim.py" "${OPENCLAW_DIR}/talk-webhook-shim.py"
+
 export OPENCLAW_SKYLIGHT_ROOT="$ROOT"
 
 # Gate I3: skills must be real dirs under workspace (OpenClaw rejects symlink-escape)
 _i3_fail=0
-for _sk in skylight email-intelligence; do
+for _sk in skylight email-intelligence forge-print; do
   _p="${OPENCLAW_DIR}/workspace/skills/${_sk}"
   if [[ ! -d "$_p" ]]; then
     echo "FAIL I3: missing skill dir $_p" >&2
